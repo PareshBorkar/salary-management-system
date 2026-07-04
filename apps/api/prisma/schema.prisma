@@ -7,33 +7,123 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum UserRole {
+  HR_MANAGER
+
+  @@map("user_role")
+}
+
+enum EmploymentStatus {
+  ACTIVE
+  INACTIVE
+  TERMINATED
+
+  @@map("employment_status")
+}
+
+enum SalaryChangeReason {
+  HIRE
+  MERIT
+  PROMOTION
+  ADJUSTMENT
+  CORRECTION
+
+  @@map("salary_change_reason")
+}
+
 model Organization {
-  id        String     @id @default(cuid())
-  name      String
-  employees Employee[]
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  id            String          @id @default(cuid())
+  name          String
+  slug          String          @unique
+  users         User[]
+  employees     Employee[]
+  salaries      Salary[]
+  salaryHistory SalaryHistory[]
+  createdAt     DateTime        @default(now()) @map("created_at")
+  updatedAt     DateTime        @updatedAt @map("updated_at")
+
+  @@map("organizations")
+}
+
+model User {
+  id                   String          @id @default(cuid())
+  organizationId       String          @map("organization_id")
+  organization         Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  email                String          @unique
+  passwordHash         String          @map("password_hash")
+  firstName            String          @map("first_name")
+  lastName             String          @map("last_name")
+  role                 UserRole        @default(HR_MANAGER)
+  isActive             Boolean         @default(true) @map("is_active")
+  lastLoginAt          DateTime?       @map("last_login_at")
+  salaryHistoryChanges SalaryHistory[] @relation("SalaryHistoryUpdatedBy")
+  createdAt            DateTime        @default(now()) @map("created_at")
+  updatedAt            DateTime        @updatedAt @map("updated_at")
+
+  @@index([organizationId])
+  @@map("users")
 }
 
 model Employee {
-  id             String       @id @default(cuid())
-  organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id])
-  firstName      String
-  lastName       String
-  email          String       @unique
+  id             String           @id @default(cuid())
+  organizationId String           @map("organization_id")
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  employeeCode   String           @map("employee_code")
+  firstName      String           @map("first_name")
+  lastName       String           @map("last_name")
+  email          String?
   title          String?
-  salaries       Salary[]
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  department     String?
+  status         EmploymentStatus @default(ACTIVE)
+  hiredAt        DateTime?        @map("hired_at")
+  salary         Salary?
+  salaryHistory  SalaryHistory[]
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
+
+  @@unique([organizationId, employeeCode])
+  @@unique([organizationId, email])
+  @@index([organizationId])
+  @@map("employees")
 }
 
 model Salary {
-  id          String   @id @default(cuid())
-  employeeId  String
-  employee    Employee @relation(fields: [employeeId], references: [id])
-  amount      Decimal
-  currency    String   @default("USD")
-  effectiveOn DateTime
-  createdAt   DateTime @default(now())
+  id             String       @id @default(cuid())
+  organizationId String       @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  employeeId     String       @unique @map("employee_id")
+  employee       Employee     @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  amount         Decimal      @db.Decimal(12, 2)
+  currency       String       @default("USD")
+  effectiveFrom  DateTime     @map("effective_from")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+
+  @@unique([organizationId, employeeId])
+  @@index([organizationId])
+  @@index([organizationId, employeeId])
+  @@map("salary")
+}
+
+model SalaryHistory {
+  id             String             @id @default(cuid())
+  organizationId String             @map("organization_id")
+  organization   Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  employeeId     String             @map("employee_id")
+  employee       Employee           @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  previousAmount Decimal            @map("previous_amount") @db.Decimal(12, 2)
+  newAmount      Decimal            @map("new_amount") @db.Decimal(12, 2)
+  currency       String             @default("USD")
+  effectiveDate  DateTime           @map("effective_date")
+  reason         SalaryChangeReason @default(ADJUSTMENT)
+  notes          String?
+  updatedById    String?            @map("updated_by_id")
+  updatedBy      User?              @relation("SalaryHistoryUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  createdAt      DateTime           @default(now()) @map("created_at")
+
+  @@index([organizationId])
+  @@index([organizationId, employeeId, effectiveDate])
+  @@index([employeeId, effectiveDate])
+  @@index([updatedById])
+  @@map("salary_history")
 }
