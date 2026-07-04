@@ -1,17 +1,28 @@
-import cors from "cors";
-import express from "express";
-import helmet from "helmet";
+import cors from "@fastify/cors";
+import helmet from "@fastify/helmet";
+import Fastify, { type FastifyInstance, type FastifyServerOptions } from "fastify";
 
-export function createApp() {
-  const app = express();
+import { env } from "./shared/config/env.js";
+import { loggerOptions } from "./shared/logger/logger.js";
+import { healthRoutes } from "./modules/health/health.routes.js";
 
-  app.use(helmet());
-  app.use(cors());
-  app.use(express.json());
+type CreateAppOptions = {
+  logger?: FastifyServerOptions["logger"];
+};
 
-  app.get("/health", (_req, res) => {
-    res.status(200).json({ status: "ok" });
+export async function createApp(
+  options: CreateAppOptions = {}
+): Promise<FastifyInstance> {
+  const app = Fastify({
+    logger: options.logger ?? loggerOptions
   });
+
+  await app.register(helmet);
+  await app.register(cors, {
+    origin: env.CORS_ORIGIN
+  });
+
+  await app.register(healthRoutes);
 
   return app;
 }
