@@ -1,7 +1,3 @@
-
 export function AppLayout() {
-
-  return (
-<> setup React TypeScript frontend</>
-  );
+  return <> setup React TypeScript frontend</>;
 }

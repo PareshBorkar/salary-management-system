@@ -6,9 +6,7 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
 const envSchema = z.object({
   APP_NAME: z.string().default("salary-management-api"),
-  NODE_ENV: z
-    .enum(["development", "test", "production"])
-    .default("development"),
+  NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   HOST: z.string().default("0.0.0.0"),
   PORT: z.coerce.number().int().positive().default(PORT),
   LOG_LEVEL: z

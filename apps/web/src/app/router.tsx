@@ -5,6 +5,6 @@ import { AppLayout } from "../components/AppLayout";
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <AppLayout />,
+    element: <AppLayout />
   }
 ]);
