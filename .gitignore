@@ -1,10 +1,32 @@
-node_modules/
+# TypeScript
+*.tsbuildinfo
+
+# Build
 dist/
 build/
+
+# Dependencies
+node_modules/
+
+# Test coverage
 coverage/
+
+# Environment
 .env
 .env.*
+
 !.env.example
-.DS_Store
+
+# Logs
 *.log
-apps/api/prisma/migrations/dev.db
+
+# OS
+.DS_Store
+
+# Prisma development database
+apps/api/prisma/dev.db
+apps/api/prisma/dev.db-journal
+
+# Database
+*.db
+*.db-journal
