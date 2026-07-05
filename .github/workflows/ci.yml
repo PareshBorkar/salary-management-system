@@ -14,6 +14,24 @@ jobs:
   quality:
     name: Quality checks
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: salary_management_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d salary_management_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://postgres:password@localhost:5432/salary_management_test?schema=public
+      JWT_SECRET: ci-jwt-secret-change-before-production
+      NODE_ENV: test
 
     steps:
       - name: Checkout
@@ -62,6 +80,12 @@ jobs:
 
       - name: Typecheck
         run: npm run typecheck
+
+      - name: Prepare test database
+        working-directory: apps/api
+        run: |
+          npx prisma db push --schema prisma/schema.prisma
+          npm run prisma:seed:test
 
       - name: Test
         run: npm test
