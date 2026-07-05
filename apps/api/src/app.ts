@@ -7,6 +7,7 @@ import { loggerOptions } from "./shared/logger/logger.js";
 import { registerAuthentication } from "./shared/auth/authenticate.js";
 import { prisma } from "./shared/database/prisma.js";
 import { authRoutes } from "./modules/auth/auth.routes.js";
+import { employeeRoutes } from "./modules/employees/employees.routes.js";
 import { healthRoutes } from "./modules/health/health.routes.js";
 
 type CreateAppOptions = {
@@ -29,6 +30,7 @@ export async function createApp(
 
   await app.register(healthRoutes, { prefix: "/v1" });
   await app.register(authRoutes, { prefix: "/v1" });
+  await app.register(employeeRoutes, { prefix: "/v1" });
 
   app.addHook("onClose", async () => {
     await prisma.$disconnect();

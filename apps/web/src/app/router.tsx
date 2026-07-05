@@ -20,7 +20,7 @@ export const router = createBrowserRouter([
     path: "/",
     element: (
       <ProtectedRoute>
-        <AppLayout >
+        <AppLayout>
           <DashboardPage />
         </AppLayout>
       </ProtectedRoute>
