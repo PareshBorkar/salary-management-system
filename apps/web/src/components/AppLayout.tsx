@@ -1,3 +1,5 @@
-export function AppLayout() {
-  return <> setup React TypeScript frontend</>;
+import type { PropsWithChildren } from "react";
+
+export function AppLayout({ children }: PropsWithChildren) {
+  return <>{children}</>;
 }
