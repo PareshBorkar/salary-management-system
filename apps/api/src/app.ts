@@ -4,6 +4,9 @@ import Fastify, { type FastifyInstance, type FastifyServerOptions } from "fastif
 
 import { env } from "./shared/config/env.js";
 import { loggerOptions } from "./shared/logger/logger.js";
+import { registerAuthentication } from "./shared/auth/authenticate.js";
+import { prisma } from "./shared/database/prisma.js";
+import { authRoutes } from "./modules/auth/auth.routes.js";
 import { healthRoutes } from "./modules/health/health.routes.js";
 
 type CreateAppOptions = {
@@ -22,7 +25,14 @@ export async function createApp(
     origin: env.CORS_ORIGIN
   });
 
-  await app.register(healthRoutes);
+  await registerAuthentication(app);
+
+  await app.register(healthRoutes, { prefix: "/v1" });
+  await app.register(authRoutes, { prefix: "/v1" });
+
+  app.addHook("onClose", async () => {
+    await prisma.$disconnect();
+  });
 
   return app;
 }
