@@ -11,11 +11,13 @@ The Salary Management System follows a **modular monolithic architecture**, wher
 The system consists of the following components:
 
 ### Client Application
+
 - React.js Single Page Application (SPA)
 - Communicates with the backend over HTTPS
 - Provides HR managers with a responsive interface for salary management
 
 ### Monolith Application
+
 The backend is organized into domain-specific modules:
 
 - Authentication
@@ -28,6 +30,7 @@ The backend is organized into domain-specific modules:
 Although deployed as a single application, each module owns its business logic and remains loosely coupled to improve maintainability.
 
 ### Redis
+
 Redis is used for **rate limiting** to protect the application against excessive or abusive requests.
 
 Responsibilities include:
@@ -39,6 +42,7 @@ Responsibilities include:
 Redis is intentionally isolated from persistent business data.
 
 ### PostgreSQL
+
 PostgreSQL serves as the primary relational database.
 
 It stores application data including:

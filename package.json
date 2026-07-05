@@ -15,8 +15,8 @@
     "lint:fix": "npm run lint:fix --workspaces",
     "test": "npm run test --workspaces",
     "test:watch": "npm run test:watch --workspaces",
-    "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format": "npx --yes prettier@3.9.4 --write .",
+    "format:check": "npx --yes prettier@3.9.4 --check ."
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^7.18.0",
