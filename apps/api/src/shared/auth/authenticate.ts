@@ -2,9 +2,16 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 
 import { verifyJwt, type AuthenticatedUser } from "./jwt.js";
 
+export type OrganizationRequestContext = {
+  userId: string;
+  organizationId: string;
+  role: string;
+};
+
 declare module "fastify" {
   interface FastifyRequest {
     currentUser: AuthenticatedUser | null;
+    requestContext: OrganizationRequestContext | null;
   }
 
   interface FastifyInstance {
@@ -14,6 +21,7 @@ declare module "fastify" {
 
 export async function registerAuthentication(app: FastifyInstance) {
   app.decorateRequest("currentUser", null);
+  app.decorateRequest("requestContext", null);
 
   app.decorate("authenticate", async (request, reply) => {
     const authorization = request.headers.authorization;
@@ -25,7 +33,14 @@ export async function registerAuthentication(app: FastifyInstance) {
 
     try {
       const token = authorization.slice("Bearer ".length);
-      request.currentUser = verifyJwt(token);
+      const currentUser = verifyJwt(token);
+
+      request.currentUser = currentUser;
+      request.requestContext = {
+        userId: currentUser.id,
+        organizationId: currentUser.organizationId,
+        role: currentUser.role
+      };
     } catch {
       await reply.code(401).send({ error: "Invalid or expired token" });
     }
