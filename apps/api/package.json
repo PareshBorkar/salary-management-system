@@ -9,7 +9,7 @@
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "start": "node dist/server.js",
-    "test": "vitest run --passWithNoTests",
+    "test": "node ../../scripts/run-vitest-if-tests.mjs",
     "test:watch": "vitest --passWithNoTests",
     "lint": "eslint src tests --ext .ts --no-error-on-unmatched-pattern",
     "lint:fix": "eslint src tests --ext .ts --fix --no-error-on-unmatched-pattern",
