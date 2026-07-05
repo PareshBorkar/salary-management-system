@@ -23,7 +23,7 @@ describe("authentication behavior", () => {
 
     const response = await app.inject({
       method: "POST",
-      url: "/auth/login",
+      url: "/v1/auth/login",
       payload: validCredentials
     });
 
@@ -54,7 +54,7 @@ describe("authentication behavior", () => {
 
     const response = await app.inject({
       method: "POST",
-      url: "/auth/login",
+      url: "/v1/auth/login",
       payload: {
         email: validCredentials.email,
         password: "wrong-password"
@@ -74,7 +74,7 @@ describe("authentication behavior", () => {
 
     const response = await app.inject({
       method: "GET",
-      url: "/employees"
+      url: "/v1/employees"
     });
 
     expect(response.statusCode).toBe(401);
