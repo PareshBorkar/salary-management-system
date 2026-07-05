@@ -26,10 +26,7 @@ export async function authRoutes(app: FastifyInstance) {
       return reply.code(401).send({ error: "Invalid email or password" });
     }
 
-    const passwordMatches = await bcrypt.compare(
-      parsed.data.password,
-      user.passwordHash
-    );
+    const passwordMatches = await bcrypt.compare(parsed.data.password, user.passwordHash);
 
     if (!passwordMatches) {
       return reply.code(401).send({ error: "Invalid email or password" });
