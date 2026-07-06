@@ -1,7 +1,9 @@
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
+import { Link as RouterLink } from "react-router-dom";
 import {
   CircularProgress,
   IconButton,
+  Link,
   Stack,
   Table,
   TableBody,
@@ -104,7 +106,15 @@ export function EmployeeTable({
                 <TableCell>
                   <Stack spacing={0.25}>
                     <Typography fontWeight={700}>
-                      {employee.firstName} {employee.lastName}
+                      <Link
+                        component={RouterLink}
+                        to={`/employees/${employee.id}`}
+                        state={{ employee }}
+                        underline="hover"
+                        color="text.primary"
+                      >
+                        {employee.firstName} {employee.lastName}
+                      </Link>
                     </Typography>
                     {employee.email ? (
                       <Typography variant="caption" color="text.secondary">

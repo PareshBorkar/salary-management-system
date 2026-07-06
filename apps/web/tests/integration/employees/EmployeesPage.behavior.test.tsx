@@ -9,6 +9,7 @@ import {
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { MemoryRouter } from "react-router-dom";
 
 import { EmployeesPage } from "../../../src/pages/Employees/EmployeesPage";
 import {
@@ -38,7 +39,8 @@ const employee: Employee = {
   level: "Senior",
   salary: {
     amount: 128000,
-    currency: "USD"
+    currency: "USD",
+    effectiveFrom: "2026-03-01T00:00:00.000Z"
   }
 };
 
@@ -74,6 +76,14 @@ function latestRequest() {
   return calls[calls.length - 1]?.[0];
 }
 
+function renderEmployeesPage() {
+  return render(
+    <MemoryRouter initialEntries={["/employees"]}>
+      <EmployeesPage />
+    </MemoryRouter>
+  );
+}
+
 describe("EmployeesPage", () => {
   beforeEach(() => {
     listEmployeesMock.mockReset();
@@ -88,7 +98,7 @@ describe("EmployeesPage", () => {
     const request = deferred<EmployeeListResponse>();
     listEmployeesMock.mockReturnValue(request.promise);
 
-    render(<EmployeesPage />);
+    renderEmployeesPage();
 
     expect(screen.getByText("Loading employees...")).toBeTruthy();
   });
@@ -96,7 +106,7 @@ describe("EmployeesPage", () => {
   it("renders the error state", async () => {
     listEmployeesMock.mockRejectedValue(new Error("Request failed"));
 
-    render(<EmployeesPage />);
+    renderEmployeesPage();
 
     expect(
       await screen.findByText("Unable to load employees. Please try again.")
@@ -116,7 +126,7 @@ describe("EmployeesPage", () => {
       })
     );
 
-    render(<EmployeesPage />);
+    renderEmployeesPage();
 
     expect(await screen.findByText("No employees found")).toBeTruthy();
     expect(screen.getByText("Try adjusting the search or filters.")).toBeTruthy();
@@ -125,7 +135,7 @@ describe("EmployeesPage", () => {
   it("renders employee rows", async () => {
     listEmployeesMock.mockResolvedValue(employeeResponse());
 
-    render(<EmployeesPage />);
+    renderEmployeesPage();
 
     expect(await screen.findByText("Aditi Sharma")).toBeTruthy();
     expect(screen.getByText("ACME-00001")).toBeTruthy();
@@ -134,6 +144,16 @@ describe("EmployeesPage", () => {
     expect(screen.getByText("Senior Engineer")).toBeTruthy();
     expect(screen.getByText("India")).toBeTruthy();
     expect(screen.getByText("$128,000")).toBeTruthy();
+  });
+
+  it("links employee names to the detail page", async () => {
+    listEmployeesMock.mockResolvedValue(employeeResponse());
+
+    renderEmployeesPage();
+
+    const employeeLink = await screen.findByRole("link", { name: "Aditi Sharma" });
+
+    expect(employeeLink.getAttribute("href")).toBe("/employees/employee-1");
   });
 
   it("requests the next page when pagination changes", async () => {
@@ -148,7 +168,7 @@ describe("EmployeesPage", () => {
       })
     );
 
-    render(<EmployeesPage />);
+    renderEmployeesPage();
 
     await screen.findByText("Aditi Sharma");
     await userEvent.click(screen.getByLabelText("Go to next page"));
@@ -159,7 +179,7 @@ describe("EmployeesPage", () => {
   it("searches employees with a debounced query", async () => {
     listEmployeesMock.mockResolvedValue(employeeResponse());
 
-    render(<EmployeesPage />);
+    renderEmployeesPage();
 
     await screen.findByText("Aditi Sharma");
     fireEvent.change(
@@ -178,7 +198,7 @@ describe("EmployeesPage", () => {
   it("requests filtered employees", async () => {
     listEmployeesMock.mockResolvedValue(employeeResponse());
 
-    render(<EmployeesPage />);
+    renderEmployeesPage();
 
     await screen.findByText("Aditi Sharma");
     await userEvent.click(screen.getByRole("combobox", { name: "Country" }));
@@ -192,7 +212,7 @@ describe("EmployeesPage", () => {
   it("requests sorted employees", async () => {
     listEmployeesMock.mockResolvedValue(employeeResponse());
 
-    render(<EmployeesPage />);
+    renderEmployeesPage();
 
     await screen.findByText("Aditi Sharma");
     await userEvent.click(

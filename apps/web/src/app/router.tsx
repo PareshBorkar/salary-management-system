@@ -4,6 +4,7 @@ import { AppLayout } from "../components/AppLayout";
 import { ProtectedRoute } from "../components/ProtectedRoute";
 import { LoginPage } from "../pages/Login/LoginPage";
 import { DashboardPage } from "../pages/Dashboard/DashboardPage";
+import { EmployeeDetailPage } from "../pages/Employees/EmployeeDetailPage";
 import { EmployeesPage } from "../pages/Employees/EmployeesPage";
 
 export const router = createBrowserRouter([
@@ -27,6 +28,16 @@ export const router = createBrowserRouter([
       <ProtectedRoute>
         <AppLayout>
           <EmployeesPage />
+        </AppLayout>
+      </ProtectedRoute>
+    )
+  },
+  {
+    path: "/employees/:employeeId",
+    element: (
+      <ProtectedRoute>
+        <AppLayout>
+          <EmployeeDetailPage />
         </AppLayout>
       </ProtectedRoute>
     )
