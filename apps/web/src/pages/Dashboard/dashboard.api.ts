@@ -8,6 +8,10 @@ export type CompensationAnalytics = {
     country: string;
     count: number;
   }>;
+  payrollByCountry?: Array<{
+    country: string;
+    totalPayroll: number;
+  }>;
   averageByDepartment: Array<{
     department: string;
     averageSalary: number;
@@ -16,6 +20,14 @@ export type CompensationAnalytics = {
     label: string;
     min: number;
     max: number | null;
+    count: number;
+  }>;
+  distributionByRole?: Array<{
+    role: string;
+    count: number;
+  }>;
+  distributionByLevel?: Array<{
+    level: string;
     count: number;
   }>;
 };
