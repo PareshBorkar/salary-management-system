@@ -26,13 +26,7 @@ export type EmployeeListRequest = {
   role?: string;
   level?: string;
   sortBy:
-    | "employeeCode"
-    | "firstName"
-    | "country"
-    | "department"
-    | "role"
-    | "level"
-    | "salary";
+    "employeeCode" | "firstName" | "country" | "department" | "role" | "level" | "salary";
   sortDirection: "asc" | "desc";
 };
 
