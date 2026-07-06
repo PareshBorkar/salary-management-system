@@ -1,18 +1,13 @@
 import { type FormEvent, useState } from "react";
 import { Alert, Box, Button, MenuItem, Stack, TextField } from "@mui/material";
 
+import { useUpdateEmployeeSalary } from "../../hooks/useUpdateEmployeeSalary";
+import type { SalaryChangeReason, UpdateEmployeeSalaryResponse } from "./employees.api";
 import {
-  updateEmployeeSalary,
-  type SalaryChangeReason,
-  type UpdateEmployeeSalaryResponse
-} from "./employees.api";
-
-const salaryChangeReasons: Array<{ value: SalaryChangeReason; label: string }> = [
-  { value: "MERIT", label: "Merit" },
-  { value: "PROMOTION", label: "Promotion" },
-  { value: "ADJUSTMENT", label: "Adjustment" },
-  { value: "CORRECTION", label: "Correction" }
-];
+  salaryChangeReasons,
+  validateSalaryUpdate,
+  type SalaryUpdateValidationErrors
+} from "./salaryUpdate.schema";
 
 type SalaryUpdateFormProps = {
   employeeId: string;
@@ -20,12 +15,6 @@ type SalaryUpdateFormProps = {
   currency?: string;
   onSuccess?: (response: UpdateEmployeeSalaryResponse) => void;
   onCancel?: () => void;
-};
-
-type ValidationErrors = {
-  amount?: string;
-  reason?: string;
-  effectiveDate?: string;
 };
 
 export function SalaryUpdateForm({
@@ -40,15 +29,12 @@ export function SalaryUpdateForm({
   const [reason, setReason] = useState("");
   const [effectiveDate, setEffectiveDate] = useState("");
   const [notes, setNotes] = useState("");
-  const [errors, setErrors] = useState<ValidationErrors>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [errors, setErrors] = useState<SalaryUpdateValidationErrors>({});
+  const { mutate, isSubmitting, successMessage, errorMessage } =
+    useUpdateEmployeeSalary();
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setSuccessMessage(null);
-    setErrorMessage(null);
 
     const validationErrors = validateSalaryUpdate({
       amount,
@@ -62,21 +48,14 @@ export function SalaryUpdateForm({
       return;
     }
 
-    setIsSubmitting(true);
+    const response = await mutate(employeeId, {
+      amount: Number(amount),
+      reason: reason as SalaryChangeReason,
+      effectiveDate
+    });
 
-    try {
-      const response = await updateEmployeeSalary(employeeId, {
-        amount: Number(amount),
-        reason: reason as SalaryChangeReason,
-        effectiveDate
-      });
-
-      setSuccessMessage("Salary updated successfully.");
+    if (response) {
       onSuccess?.(response);
-    } catch {
-      setErrorMessage("Unable to update salary. Please try again.");
-    } finally {
-      setIsSubmitting(false);
     }
   }
 
@@ -167,31 +146,4 @@ export function SalaryUpdateForm({
       </Stack>
     </Stack>
   );
-}
-
-function validateSalaryUpdate(input: {
-  amount: string;
-  reason: string;
-  effectiveDate: string;
-}) {
-  const errors: ValidationErrors = {};
-  const amount = Number(input.amount);
-
-  if (!input.amount.trim()) {
-    errors.amount = "Salary is required.";
-  } else if (!Number.isFinite(amount) || amount <= 0) {
-    errors.amount = "Salary must be greater than 0.";
-  }
-
-  if (!input.reason) {
-    errors.reason = "Reason is required.";
-  }
-
-  if (!input.effectiveDate) {
-    errors.effectiveDate = "Effective date is required.";
-  } else if (Number.isNaN(new Date(input.effectiveDate).getTime())) {
-    errors.effectiveDate = "Effective date must be valid.";
-  }
-
-  return errors;
 }
