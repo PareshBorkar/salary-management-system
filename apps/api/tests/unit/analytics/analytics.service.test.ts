@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { calculateCompensationAnalytics } from "../../../src/modules/analytics/analytics.service.js";
+import {
+  buildCompensationAnalyticsResponse,
+  calculateCompensationAnalytics
+} from "../../../src/modules/analytics/analytics.service.js";
 
 describe("calculateCompensationAnalytics", () => {
   it("calculates compensation totals and deterministic groups", () => {
@@ -42,5 +45,45 @@ describe("calculateCompensationAnalytics", () => {
     expect(result.countByCountry).toEqual([]);
     expect(result.averageByDepartment).toEqual([]);
     expect(result.salaryBands.map((band) => band.count)).toEqual([0, 0, 0, 0, 0]);
+  });
+});
+
+describe("buildCompensationAnalyticsResponse", () => {
+  it("maps aggregate query results to the dashboard response shape", () => {
+    const result = buildCompensationAnalyticsResponse({
+      totalPayroll: 375_000,
+      averageSalary: 93_750,
+      medianSalary: 87_500,
+      countByCountry: [
+        { country: "IN", count: 1 },
+        { country: "US", count: 2 }
+      ],
+      averageByDepartment: [{ department: "Engineering", averageSalary: 75_000 }],
+      salaryBandCounts: {
+        under50k: 0,
+        from50kTo75k: 1,
+        from75kTo100k: 1,
+        from100kTo150k: 1,
+        from150k: 1
+      }
+    });
+
+    expect(result).toEqual({
+      totalPayroll: 375_000,
+      averageSalary: 93_750,
+      medianSalary: 87_500,
+      countByCountry: [
+        { country: "IN", count: 1 },
+        { country: "US", count: 2 }
+      ],
+      averageByDepartment: [{ department: "Engineering", averageSalary: 75_000 }],
+      salaryBands: [
+        { label: "Under $50k", min: 0, max: 50_000, count: 0 },
+        { label: "$50k-$75k", min: 50_000, max: 75_000, count: 1 },
+        { label: "$75k-$100k", min: 75_000, max: 100_000, count: 1 },
+        { label: "$100k-$150k", min: 100_000, max: 150_000, count: 1 },
+        { label: "$150k+", min: 150_000, max: null, count: 1 }
+      ]
+    });
   });
 });

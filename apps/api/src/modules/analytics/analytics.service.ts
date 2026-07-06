@@ -1,4 +1,7 @@
-import { findCompensationAnalyticsRecords } from "./analytics.repository.js";
+import {
+  findCompensationAnalytics,
+  type CompensationAnalyticsQueryResult
+} from "./analytics.repository.js";
 
 type CompensationAnalyticsRecord = {
   country: string | null;
@@ -41,9 +44,28 @@ const salaryBands: SalaryBand[] = [
 ];
 
 export async function getCompensationAnalytics(organizationId: string) {
-  const records = await findCompensationAnalyticsRecords(organizationId);
+  const analytics = await findCompensationAnalytics(organizationId);
 
-  return calculateCompensationAnalytics(records);
+  return buildCompensationAnalyticsResponse(analytics);
+}
+
+export function buildCompensationAnalyticsResponse(
+  analytics: CompensationAnalyticsQueryResult
+): CompensationAnalytics {
+  return {
+    totalPayroll: analytics.totalPayroll,
+    averageSalary: analytics.averageSalary,
+    medianSalary: analytics.medianSalary,
+    countByCountry: analytics.countByCountry,
+    averageByDepartment: analytics.averageByDepartment,
+    salaryBands: [
+      buildSalaryBand(salaryBands[0]!, analytics.salaryBandCounts.under50k),
+      buildSalaryBand(salaryBands[1]!, analytics.salaryBandCounts.from50kTo75k),
+      buildSalaryBand(salaryBands[2]!, analytics.salaryBandCounts.from75kTo100k),
+      buildSalaryBand(salaryBands[3]!, analytics.salaryBandCounts.from100kTo150k),
+      buildSalaryBand(salaryBands[4]!, analytics.salaryBandCounts.from150k)
+    ]
+  };
 }
 
 export function calculateCompensationAnalytics(
@@ -118,4 +140,13 @@ function isSalaryInBand(salary: number, band: SalaryBand) {
   }
 
   return salary >= band.min && salary < band.max;
+}
+
+function buildSalaryBand(band: SalaryBand, count: number) {
+  return {
+    label: band.label,
+    min: band.min,
+    max: band.max,
+    count
+  };
 }
