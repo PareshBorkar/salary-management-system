@@ -10,6 +10,7 @@ import { authRoutes } from "./modules/auth/auth.routes.js";
 import { employeeRoutes } from "./modules/employees/employees.routes.js";
 import { healthRoutes } from "./modules/health/health.routes.js";
 import { salaryRoutes } from "./modules/salaries/salaries.routes.js";
+import { analyticsRoutes } from "./modules/analytics/analytics.routes.js";
 
 type CreateAppOptions = {
   logger?: FastifyServerOptions["logger"];
@@ -33,6 +34,7 @@ export async function createApp(
   await app.register(authRoutes, { prefix: "/v1" });
   await app.register(employeeRoutes, { prefix: "/v1" });
   await app.register(salaryRoutes, { prefix: "/v1" });
+  await app.register(analyticsRoutes, { prefix: "/v1" });
 
   app.addHook("onClose", async () => {
     await prisma.$disconnect();
