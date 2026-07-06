@@ -1,4 +1,4 @@
-import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type { FastifyInstance } from "fastify";
 import bcrypt from "bcryptjs";
 
@@ -36,6 +36,10 @@ describe("salary update behavior", () => {
 
   beforeAll(async () => {
     await seedSalaryTestData();
+  });
+
+  beforeEach(async () => {
+    await resetSalaryTestState();
   });
 
   afterEach(async () => {
@@ -109,6 +113,10 @@ describe("salary update behavior", () => {
         newAmount: number;
         reason: string;
         updatedById: string | null;
+        changedBy: {
+          id: string;
+          email: string;
+        };
       };
     }>();
 
@@ -121,6 +129,136 @@ describe("salary update behavior", () => {
       newAmount: 125000,
       reason: "MERIT",
       updatedById: userId
+    });
+    expect(body.salaryHistory.changedBy).toMatchObject({
+      id: userId,
+      email: "salary.test.hr@acme.example"
+    });
+  });
+
+  it("updates the current salary record", async () => {
+    app = await createApp({ logger: false });
+
+    const response = await app.inject({
+      method: "PATCH",
+      url: `/v1/employees/${employeeId}/salary`,
+      headers: authorizationHeader(),
+      payload: {
+        amount: 127500,
+        reason: "PROMOTION",
+        effectiveDate: "2026-04-01"
+      }
+    });
+
+    expect(response.statusCode).toBe(200);
+
+    const salary = await prisma.salary.findUnique({
+      where: {
+        organizationId_employeeId: {
+          organizationId,
+          employeeId
+        }
+      }
+    });
+
+    expect(salary?.amount.toNumber()).toBe(127500);
+    expect(salary?.effectiveFrom.toISOString()).toBe("2026-04-01T00:00:00.000Z");
+  });
+
+  it("preserves the previous salary in salary history", async () => {
+    app = await createApp({ logger: false });
+
+    const response = await app.inject({
+      method: "PATCH",
+      url: `/v1/employees/${employeeId}/salary`,
+      headers: authorizationHeader(),
+      payload: {
+        amount: 130000,
+        reason: "ADJUSTMENT",
+        effectiveDate: "2026-05-01"
+      }
+    });
+
+    expect(response.statusCode).toBe(200);
+
+    const salaryHistory = await latestSalaryHistory();
+
+    expect(salaryHistory?.previousAmount.toNumber()).toBe(90000);
+    expect(salaryHistory?.newAmount.toNumber()).toBe(130000);
+  });
+
+  it("creates a salary history record", async () => {
+    app = await createApp({ logger: false });
+
+    const historyCountBeforeUpdate = await prisma.salaryHistory.count({
+      where: {
+        organizationId,
+        employeeId
+      }
+    });
+
+    const response = await app.inject({
+      method: "PATCH",
+      url: `/v1/employees/${employeeId}/salary`,
+      headers: authorizationHeader(),
+      payload: {
+        amount: 132000,
+        reason: "CORRECTION",
+        effectiveDate: "2026-06-01"
+      }
+    });
+
+    expect(response.statusCode).toBe(200);
+
+    const historyCountAfterUpdate = await prisma.salaryHistory.count({
+      where: {
+        organizationId,
+        employeeId
+      }
+    });
+    const salaryHistory = await latestSalaryHistory();
+
+    expect(historyCountAfterUpdate).toBe(historyCountBeforeUpdate + 1);
+    expect(salaryHistory).toMatchObject({
+      organizationId,
+      employeeId,
+      reason: "CORRECTION"
+    });
+  });
+
+  it("records the changedBy user on salary history", async () => {
+    app = await createApp({ logger: false });
+
+    const response = await app.inject({
+      method: "PATCH",
+      url: `/v1/employees/${employeeId}/salary`,
+      headers: authorizationHeader(),
+      payload: {
+        amount: 134000,
+        reason: "MERIT",
+        effectiveDate: "2026-07-01"
+      }
+    });
+
+    expect(response.statusCode).toBe(200);
+
+    const salaryHistory = await prisma.salaryHistory.findFirst({
+      where: {
+        organizationId,
+        employeeId
+      },
+      orderBy: {
+        createdAt: "desc"
+      },
+      include: {
+        updatedBy: true
+      }
+    });
+
+    expect(salaryHistory?.updatedById).toBe(userId);
+    expect(salaryHistory?.updatedBy).toMatchObject({
+      id: userId,
+      email: "salary.test.hr@acme.example"
     });
   });
 
@@ -175,6 +313,12 @@ describe("salary update behavior", () => {
 
   it("does not update employees outside the authenticated organization", async () => {
     app = await createApp({ logger: false });
+    const historyCountBeforeUpdate = await prisma.salaryHistory.count({
+      where: {
+        organizationId,
+        employeeId
+      }
+    });
 
     const response = await app.inject({
       method: "PATCH",
@@ -188,6 +332,24 @@ describe("salary update behavior", () => {
     });
 
     expect(response.statusCode).toBe(404);
+
+    const salary = await prisma.salary.findUnique({
+      where: {
+        organizationId_employeeId: {
+          organizationId,
+          employeeId
+        }
+      }
+    });
+    const historyCountAfterUpdate = await prisma.salaryHistory.count({
+      where: {
+        organizationId,
+        employeeId
+      }
+    });
+
+    expect(salary?.amount.toNumber()).toBe(90000);
+    expect(historyCountAfterUpdate).toBe(historyCountBeforeUpdate);
   });
 });
 
@@ -296,6 +458,48 @@ async function seedSalaryTestData() {
       amount: "90000.00",
       currency: "USD",
       effectiveFrom: new Date("2026-01-01")
+    }
+  });
+}
+
+async function resetSalaryTestState() {
+  await prisma.salaryHistory.deleteMany({
+    where: {
+      organizationId,
+      employeeId
+    }
+  });
+
+  await prisma.salary.upsert({
+    where: {
+      organizationId_employeeId: {
+        organizationId,
+        employeeId
+      }
+    },
+    update: {
+      amount: "90000.00",
+      currency: "USD",
+      effectiveFrom: new Date("2026-01-01")
+    },
+    create: {
+      organizationId,
+      employeeId,
+      amount: "90000.00",
+      currency: "USD",
+      effectiveFrom: new Date("2026-01-01")
+    }
+  });
+}
+
+async function latestSalaryHistory() {
+  return prisma.salaryHistory.findFirst({
+    where: {
+      organizationId,
+      employeeId
+    },
+    orderBy: {
+      createdAt: "desc"
     }
   });
 }
