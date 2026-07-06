@@ -1,5 +1,12 @@
 /* @vitest-environment jsdom */
-import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -35,7 +42,9 @@ const employee: Employee = {
   }
 };
 
-function employeeResponse(overrides?: Partial<EmployeeListResponse>): EmployeeListResponse {
+function employeeResponse(
+  overrides?: Partial<EmployeeListResponse>
+): EmployeeListResponse {
   return {
     employees: [employee],
     pagination: {
@@ -89,7 +98,9 @@ describe("EmployeesPage", () => {
 
     render(<EmployeesPage />);
 
-    expect(await screen.findByText("Unable to load employees. Please try again.")).toBeTruthy();
+    expect(
+      await screen.findByText("Unable to load employees. Please try again.")
+    ).toBeTruthy();
   });
 
   it("renders the empty state", async () => {
@@ -151,12 +162,17 @@ describe("EmployeesPage", () => {
     render(<EmployeesPage />);
 
     await screen.findByText("Aditi Sharma");
-    fireEvent.change(screen.getByPlaceholderText("Search by name, email, employee ID..."), {
-      target: { value: "Aditi" }
-    });
+    fireEvent.change(
+      screen.getByPlaceholderText("Search by name, email, employee ID..."),
+      {
+        target: { value: "Aditi" }
+      }
+    );
     await new Promise((resolve) => window.setTimeout(resolve, 400));
 
-    await waitFor(() => expect(latestRequest()).toMatchObject({ page: 1, search: "Aditi" }));
+    await waitFor(() =>
+      expect(latestRequest()).toMatchObject({ page: 1, search: "Aditi" })
+    );
   });
 
   it("requests filtered employees", async () => {
@@ -168,7 +184,9 @@ describe("EmployeesPage", () => {
     await userEvent.click(screen.getByRole("combobox", { name: "Country" }));
     await userEvent.click(await screen.findByRole("option", { name: "India" }));
 
-    await waitFor(() => expect(latestRequest()).toMatchObject({ page: 1, country: "IN" }));
+    await waitFor(() =>
+      expect(latestRequest()).toMatchObject({ page: 1, country: "IN" })
+    );
   });
 
   it("requests sorted employees", async () => {
@@ -177,7 +195,11 @@ describe("EmployeesPage", () => {
     render(<EmployeesPage />);
 
     await screen.findByText("Aditi Sharma");
-    await userEvent.click(within(screen.getByRole("columnheader", { name: /Annual Salary/i })).getByRole("button"));
+    await userEvent.click(
+      within(screen.getByRole("columnheader", { name: /Annual Salary/i })).getByRole(
+        "button"
+      )
+    );
 
     await waitFor(() =>
       expect(latestRequest()).toMatchObject({
@@ -187,7 +209,11 @@ describe("EmployeesPage", () => {
       })
     );
 
-    await userEvent.click(within(screen.getByRole("columnheader", { name: /Annual Salary/i })).getByRole("button"));
+    await userEvent.click(
+      within(screen.getByRole("columnheader", { name: /Annual Salary/i })).getByRole(
+        "button"
+      )
+    );
 
     await waitFor(() =>
       expect(latestRequest()).toMatchObject({
