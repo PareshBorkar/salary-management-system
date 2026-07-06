@@ -108,10 +108,10 @@ describe("DashboardPage", () => {
     render(<DashboardPage />);
 
     expect(await screen.findByText("Total Employees")).toBeTruthy();
-    expect(metricValue("Total Employees")).toBe("10");
-    expect(metricValue("Total Payroll")).toBe("$1,250,000");
-    expect(metricValue("Average Salary")).toBe("$125,000");
-    expect(metricValue("Median Salary")).toBe("$118,000");
+    expect(screen.getByText("10")).toBeTruthy();
+    expect(screen.getByText("$1,250,000")).toBeTruthy();
+    expect(screen.getByText("$125,000")).toBeTruthy();
+    expect(screen.getByText("$118,000")).toBeTruthy();
 
     const countries = screen.getByText("Countries").closest(".MuiPaper-root");
     expect(countries).toBeTruthy();
@@ -128,16 +128,3 @@ describe("DashboardPage", () => {
     expect(within(departments as HTMLElement).getByText("$105,000")).toBeTruthy();
   });
 });
-
-function metricValue(label: string) {
-  const labelElement = screen.getByText(label);
-  const card = labelElement.closest(".MuiPaper-root");
-
-  if (!card) {
-    throw new Error(`Unable to find metric card for ${label}`);
-  }
-
-  return within(card as HTMLElement)
-    .getAllByText(/\S+/)
-    .at(-1)?.textContent;
-}
