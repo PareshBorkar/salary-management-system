@@ -1,5 +1,6 @@
 /* @vitest-environment jsdom */
 import { cleanup, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it } from "vitest";
 
 import {
@@ -8,6 +9,7 @@ import {
 } from "../../../src/pages/Employees/EmployeeProfile";
 
 const employee: EmployeeProfileData = {
+  id: "employee-1",
   employeeCode: "ACME-00042",
   firstName: "Aditi",
   lastName: "Sharma",
@@ -87,5 +89,24 @@ describe("EmployeeProfile", () => {
     expect(
       screen.getByText("Changed by ACME HR Manager (hr.manager@acme.example)")
     ).toBeTruthy();
+  });
+
+  it("opens the update salary popup", async () => {
+    render(<EmployeeProfile employee={employee} />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Update Salary" }));
+
+    expect(screen.getByRole("dialog")).toBeTruthy();
+    expect(screen.getByLabelText("Employee").textContent).toContain(
+      "Aditi Sharma (ACME-00042)"
+    );
+    expect(screen.getByRole("textbox", { name: "Effective From" })).toBeTruthy();
+    expect(screen.getByRole("spinbutton", { name: /Annual Base Salary/ })).toBeTruthy();
+    expect(screen.getByLabelText("Currency").textContent).toContain("USD");
+    expect(screen.getByRole("spinbutton", { name: "Variable (Target)" })).toBeTruthy();
+    expect(screen.getByRole("combobox", { name: /Reason/ })).toBeTruthy();
+    expect(screen.getByLabelText("Notes")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Cancel" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Save & Update" })).toBeTruthy();
   });
 });
