@@ -1,6 +1,6 @@
 import { prisma } from "../../shared/database/prisma.js";
 
-export type UpdateEmployeeSalaryInput = {
+export type PersistEmployeeSalaryUpdateInput = {
   organizationId: string;
   employeeId: string;
   amount: number;
@@ -9,34 +9,40 @@ export type UpdateEmployeeSalaryInput = {
   updatedById: string;
 };
 
-export async function updateEmployeeSalary(input: UpdateEmployeeSalaryInput) {
-  const employee = await prisma.employee.findFirst({
-    where: {
-      id: input.employeeId,
-      organizationId: input.organizationId
-    },
-    include: {
-      salary: true
-    }
-  });
-
-  if (!employee) {
-    return null;
-  }
-
-  const updatedBy = await prisma.user.findFirst({
-    where: {
-      id: input.updatedById,
-      organizationId: input.organizationId
-    },
-    select: {
-      id: true
-    }
-  });
-
-  const previousAmount = employee.salary?.amount.toNumber() ?? 0;
-
+export async function persistEmployeeSalaryUpdate(
+  input: PersistEmployeeSalaryUpdateInput
+) {
   return prisma.$transaction(async (transaction) => {
+    const employee = await transaction.employee.findFirst({
+      where: {
+        id: input.employeeId,
+        organizationId: input.organizationId
+      },
+      include: {
+        salary: true
+      }
+    });
+
+    if (!employee) {
+      return null;
+    }
+
+    const updatedBy = await transaction.user.findFirst({
+      where: {
+        id: input.updatedById,
+        organizationId: input.organizationId
+      },
+      select: {
+        id: true,
+        email: true
+      }
+    });
+
+    if (!updatedBy) {
+      return null;
+    }
+
+    const previousAmount = employee.salary?.amount.toNumber() ?? 0;
     const salary = await transaction.salary.upsert({
       where: {
         organizationId_employeeId: {
@@ -67,13 +73,14 @@ export async function updateEmployeeSalary(input: UpdateEmployeeSalaryInput) {
         currency: salary.currency,
         effectiveDate: input.effectiveDate,
         reason: input.reason,
-        updatedById: updatedBy?.id ?? null
+        updatedById: updatedBy.id
       }
     });
 
     return {
       salary,
-      salaryHistory
+      salaryHistory,
+      updatedBy
     };
   });
 }

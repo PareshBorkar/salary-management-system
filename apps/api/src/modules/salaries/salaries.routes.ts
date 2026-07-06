@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 
-import { updateEmployeeSalary } from "./salaries.repository.js";
+import { updateEmployeeSalary } from "./salaries.service.js";
 import {
   salaryUpdateBodySchema,
   salaryUpdateParamsSchema
@@ -50,7 +50,11 @@ export async function salaryRoutes(app: FastifyInstance) {
           currency: result.salaryHistory.currency,
           effectiveDate: result.salaryHistory.effectiveDate.toISOString(),
           reason: result.salaryHistory.reason,
-          updatedById: result.salaryHistory.updatedById
+          updatedById: result.salaryHistory.updatedById,
+          changedBy: {
+            id: result.updatedBy.id,
+            email: result.updatedBy.email
+          }
         }
       });
     }
