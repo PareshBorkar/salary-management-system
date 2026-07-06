@@ -74,6 +74,9 @@ model Employee {
   email          String?
   title          String?
   department     String?
+  country        String?
+  role           String?
+  level          String?
   status         EmploymentStatus @default(ACTIVE)
   hiredAt        DateTime?        @map("hired_at")
   salary         Salary?
