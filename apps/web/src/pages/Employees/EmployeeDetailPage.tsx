@@ -29,6 +29,7 @@ export function EmployeeDetailPage() {
 
 function toEmployeeProfileData(employee: Employee): EmployeeProfileData {
   return {
+    id: employee.id,
     employeeCode: employee.employeeCode,
     firstName: employee.firstName,
     lastName: employee.lastName,

@@ -1,11 +1,15 @@
+import CloseIcon from "@mui/icons-material/Close";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import {
   Avatar,
   Box,
   Button,
   Chip,
+  Dialog,
+  DialogContent,
+  DialogTitle,
   Divider,
   IconButton,
   Paper,
@@ -16,6 +20,7 @@ import {
 } from "@mui/material";
 
 import { formatCountry } from "./employeeOptions";
+import { SalaryUpdateForm } from "./SalaryUpdateForm";
 
 type SalaryHistoryEntry = {
   id: string;
@@ -31,6 +36,7 @@ type SalaryHistoryEntry = {
 };
 
 export type EmployeeProfileData = {
+  id?: string;
   employeeCode: string;
   firstName: string;
   lastName: string;
@@ -62,7 +68,9 @@ export type EmployeeProfileData = {
 };
 
 export function EmployeeProfile({ employee }: { employee: EmployeeProfileData }) {
+  const [isSalaryDialogOpen, setIsSalaryDialogOpen] = useState(false);
   const employeeName = `${employee.firstName} ${employee.lastName}`;
+  const employeeId = employee.id ?? employee.employeeCode;
   const salaryCurrency =
     employee.salary?.currency ?? employee.compensationSummary?.currency ?? "USD";
   const compensationSummary =
@@ -132,7 +140,9 @@ export function EmployeeProfile({ employee }: { employee: EmployeeProfileData })
               spacing={1}
               justifyContent={{ xs: "flex-start", md: "flex-end" }}
             >
-              <Button variant="contained">Update Salary</Button>
+              <Button variant="contained" onClick={() => setIsSalaryDialogOpen(true)}>
+                Update Salary
+              </Button>
               <IconButton aria-label="More employee actions">
                 <MoreHorizIcon />
               </IconButton>
@@ -262,6 +272,46 @@ export function EmployeeProfile({ employee }: { employee: EmployeeProfileData })
           </SectionPanel>
         </Box>
       </Stack>
+
+      <Dialog
+        open={isSalaryDialogOpen}
+        onClose={() => setIsSalaryDialogOpen(false)}
+        fullWidth
+        maxWidth="sm"
+        PaperProps={{
+          sx: {
+            borderRadius: 2
+          }
+        }}
+      >
+        <DialogTitle
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            pb: 1,
+            fontSize: "1rem",
+            fontWeight: 800
+          }}
+        >
+          Update Salary
+          <IconButton
+            aria-label="Close salary update"
+            onClick={() => setIsSalaryDialogOpen(false)}
+            size="small"
+          >
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent sx={{ pt: 1.5, pb: 2.5 }}>
+          <SalaryUpdateForm
+            employeeId={employeeId}
+            employeeLabel={`${employeeName} (${employee.employeeCode})`}
+            currency={salaryCurrency}
+            onCancel={() => setIsSalaryDialogOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
     </Paper>
   );
 }

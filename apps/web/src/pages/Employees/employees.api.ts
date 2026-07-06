@@ -14,6 +14,7 @@ export type Employee = {
   salary: {
     amount: number;
     currency: string;
+    effectiveFrom?: string;
   } | null;
 };
 
@@ -40,11 +41,52 @@ export type EmployeeListResponse = {
   };
 };
 
+export type SalaryChangeReason = "MERIT" | "PROMOTION" | "ADJUSTMENT" | "CORRECTION";
+
+export type UpdateEmployeeSalaryRequest = {
+  amount: number;
+  reason: SalaryChangeReason;
+  effectiveDate: string;
+};
+
+export type UpdateEmployeeSalaryResponse = {
+  salary: {
+    amount: number;
+    currency: string;
+    effectiveFrom: string;
+  };
+  salaryHistory: {
+    id: string;
+    previousAmount: number;
+    newAmount: number;
+    currency: string;
+    effectiveDate: string;
+    reason: SalaryChangeReason;
+    updatedById: string | null;
+    changedBy: {
+      id: string;
+      email: string;
+    };
+  };
+};
+
 export async function listEmployees(params: EmployeeListRequest, signal?: AbortSignal) {
   const response = await apiClient.get<EmployeeListResponse>("/employees", {
     signal,
     params
   });
+
+  return response.data;
+}
+
+export async function updateEmployeeSalary(
+  employeeId: string,
+  payload: UpdateEmployeeSalaryRequest
+) {
+  const response = await apiClient.patch<UpdateEmployeeSalaryResponse>(
+    `/employees/${employeeId}/salary`,
+    payload
+  );
 
   return response.data;
 }
