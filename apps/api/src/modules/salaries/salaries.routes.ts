@@ -37,26 +37,7 @@ export async function salaryRoutes(app: FastifyInstance) {
         return reply.code(404).send({ error: "Employee not found" });
       }
 
-      return reply.send({
-        salary: {
-          amount: result.salary.amount.toNumber(),
-          currency: result.salary.currency,
-          effectiveFrom: result.salary.effectiveFrom.toISOString()
-        },
-        salaryHistory: {
-          id: result.salaryHistory.id,
-          previousAmount: result.salaryHistory.previousAmount.toNumber(),
-          newAmount: result.salaryHistory.newAmount.toNumber(),
-          currency: result.salaryHistory.currency,
-          effectiveDate: result.salaryHistory.effectiveDate.toISOString(),
-          reason: result.salaryHistory.reason,
-          updatedById: result.salaryHistory.updatedById,
-          changedBy: {
-            id: result.updatedBy.id,
-            email: result.updatedBy.email
-          }
-        }
-      });
+      return reply.send(result);
     }
   );
 }
