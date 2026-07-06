@@ -51,6 +51,20 @@ const departments = [
   "Support"
 ];
 
+const countries = ["US", "IN", "GB", "DE", "CA", "AU", "SG"];
+
+const roles = [
+  "Engineer",
+  "Analyst",
+  "HR Partner",
+  "Operations Lead",
+  "Product Manager",
+  "Account Executive",
+  "Support Specialist"
+];
+
+const levels = ["Junior", "Mid", "Senior", "Lead", "Principal"];
+
 const titles = [
   "Associate",
   "Specialist",
@@ -141,6 +155,9 @@ async function main() {
       email: `${employeeCode(index).toLowerCase()}@acme.example`,
       title: pick(titles, index),
       department: pick(departments, index),
+      country: pick(countries, index),
+      role: pick(roles, index),
+      level: pick(levels, index),
       status: "ACTIVE" as const,
       hiredAt: new Date(Date.UTC(2018 + (index % 8), index % 12, (index % 28) + 1))
     };
@@ -151,6 +168,21 @@ async function main() {
       data: batch,
       skipDuplicates: true
     });
+  }
+
+  for (const batch of chunks(employees, BATCH_SIZE)) {
+    await prisma.$transaction(
+      batch.map((employee) =>
+        prisma.employee.update({
+          where: { id: employee.id },
+          data: {
+            country: employee.country,
+            role: employee.role,
+            level: employee.level
+          }
+        })
+      )
+    );
   }
 
   const salaries = employees.map((employee, offset) => ({
