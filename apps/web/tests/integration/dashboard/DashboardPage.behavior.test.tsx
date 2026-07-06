@@ -38,6 +38,10 @@ function analyticsResponse(
       { country: "India", count: 6 },
       { country: "United States", count: 4 }
     ],
+    payrollByCountry: [
+      { country: "India", totalPayroll: 650_000 },
+      { country: "United States", totalPayroll: 600_000 }
+    ],
     averageByDepartment: [
       { department: "Engineering", averageSalary: 140_000 },
       { department: "Sales", averageSalary: 105_000 }
@@ -48,6 +52,16 @@ function analyticsResponse(
       { label: "$75k-$100k", min: 75_000, max: 100_000, count: 2 },
       { label: "$100k-$150k", min: 100_000, max: 150_000, count: 5 },
       { label: "$150k+", min: 150_000, max: null, count: 2 }
+    ],
+    distributionByRole: [
+      { role: "Engineer", count: 5 },
+      { role: "Manager", count: 3 },
+      { role: "Analyst", count: 2 }
+    ],
+    distributionByLevel: [
+      { level: "Senior", count: 4 },
+      { level: "Mid", count: 4 },
+      { level: "Junior", count: 2 }
     ],
     ...overrides
   };
@@ -113,18 +127,68 @@ describe("DashboardPage", () => {
     expect(screen.getByText("$125,000")).toBeTruthy();
     expect(screen.getByText("$118,000")).toBeTruthy();
 
-    const countries = screen.getByText("Countries").closest(".MuiPaper-root");
+    const countries = screen.getByText("Payroll by Country").closest(".MuiPaper-root");
     expect(countries).toBeTruthy();
     expect(within(countries as HTMLElement).getByText("India")).toBeTruthy();
     expect(within(countries as HTMLElement).getByText("6 employees")).toBeTruthy();
+    expect(within(countries as HTMLElement).getByText("$650,000")).toBeTruthy();
     expect(within(countries as HTMLElement).getByText("United States")).toBeTruthy();
     expect(within(countries as HTMLElement).getByText("4 employees")).toBeTruthy();
+    expect(within(countries as HTMLElement).getByText("$600,000")).toBeTruthy();
 
-    const departments = screen.getByText("Departments").closest(".MuiPaper-root");
+    const departments = screen
+      .getByText("Average Salary by Department")
+      .closest(".MuiPaper-root");
     expect(departments).toBeTruthy();
     expect(within(departments as HTMLElement).getByText("Engineering")).toBeTruthy();
     expect(within(departments as HTMLElement).getByText("$140,000")).toBeTruthy();
     expect(within(departments as HTMLElement).getByText("Sales")).toBeTruthy();
     expect(within(departments as HTMLElement).getByText("$105,000")).toBeTruthy();
+  });
+
+  it("renders chart data for country payroll, department averages, salary bands, roles, and levels", async () => {
+    getCompensationAnalyticsMock.mockResolvedValue(analyticsResponse());
+
+    render(<DashboardPage />);
+
+    expect(await screen.findByLabelText("Countries distribution")).toBeTruthy();
+
+    const countryPayroll = screen
+      .getByText("Payroll by Country")
+      .closest(".MuiPaper-root");
+    expect(countryPayroll).toBeTruthy();
+    expect(within(countryPayroll as HTMLElement).getByText("$650,000")).toBeTruthy();
+    expect(within(countryPayroll as HTMLElement).getByText("$600,000")).toBeTruthy();
+
+    const departmentAverages = screen
+      .getByText("Average Salary by Department")
+      .closest(".MuiPaper-root");
+    expect(departmentAverages).toBeTruthy();
+    expect(within(departmentAverages as HTMLElement).getByText("$140,000")).toBeTruthy();
+    expect(within(departmentAverages as HTMLElement).getByText("$105,000")).toBeTruthy();
+
+    const salaryBands = screen.getByText("Salary Bands").closest(".MuiPaper-root");
+    expect(salaryBands).toBeTruthy();
+    expect(
+      within(salaryBands as HTMLElement).getByLabelText("Salary bands chart")
+    ).toBeTruthy();
+    expect(within(salaryBands as HTMLElement).getByText("$50k-$75k")).toBeTruthy();
+    expect(within(salaryBands as HTMLElement).getByText("$100k-$150k")).toBeTruthy();
+    expect(within(salaryBands as HTMLElement).getByText("$150k+")).toBeTruthy();
+
+    const distribution = screen
+      .getByText("Role and Level Distribution")
+      .closest(".MuiPaper-root");
+    expect(distribution).toBeTruthy();
+    expect(
+      within(distribution as HTMLElement).getByLabelText("Role distribution chart")
+    ).toBeTruthy();
+    expect(
+      within(distribution as HTMLElement).getByLabelText("Level distribution chart")
+    ).toBeTruthy();
+    expect(within(distribution as HTMLElement).getByText("Engineer")).toBeTruthy();
+    expect(within(distribution as HTMLElement).getByText("Manager")).toBeTruthy();
+    expect(within(distribution as HTMLElement).getByText("Senior")).toBeTruthy();
+    expect(within(distribution as HTMLElement).getByText("Junior")).toBeTruthy();
   });
 });
