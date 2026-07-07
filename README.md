@@ -22,6 +22,7 @@ The application follows a **Modular Monolith** architecture with PostgreSQL as t
 
 - [Architecture](./docs/architecture.md)
 - [Technical Trade-offs](./docs/tradeoffs.md)
+- [EC2 Deployment](./docs/deployment-ec2.md)
 - [User Stories](./docs/user-stories.md)
 
 ## Docker
