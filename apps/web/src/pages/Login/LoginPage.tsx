@@ -20,6 +20,7 @@ import { type FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { getApiErrorMessage } from "../../api/responses";
+import { setSessionToken } from "../../api/session";
 import { login } from "./login.api";
 
 export function LoginPage() {
@@ -36,7 +37,7 @@ export function LoginPage() {
 
     try {
       const result = await login({ email, password });
-      localStorage.setItem("salary-management-token", result.token);
+      setSessionToken(result.token);
       navigate("/");
     } catch (error) {
       setErrorMessage(getApiErrorMessage(error, "Invalid email or password."));
