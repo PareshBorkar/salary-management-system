@@ -210,6 +210,7 @@ Potential improvements include:
 - Object storage for reports and attachments
 - Extraction of individual domains into microservices
 - Centralized observability and monitoring
+- Migration from single-host infrastructure toward managed AWS services
 
 One natural next step is to forward structured logs and health-derived operational signals into Amazon CloudWatch. That path would allow the team to add:
 
@@ -219,5 +220,13 @@ One natural next step is to forward structured logs and health-derived operation
 - Longer-term retention for operational diagnostics
 
 Because the application already emits structured logs and stable request IDs, that future integration can be added without redesigning the API modules themselves.
+
+The broader infrastructure path can also evolve incrementally:
+
+- Single EC2-hosted PostgreSQL -> Amazon RDS
+- Redis container -> Amazon ElastiCache
+- API container -> Amazon ECS/Fargate
+- Frontend hosting -> Amazon S3 + CloudFront
+- Logs and operational monitoring -> Amazon CloudWatch
 
 These enhancements can be introduced incrementally without requiring significant architectural changes.

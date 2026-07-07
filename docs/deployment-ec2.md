@@ -85,3 +85,25 @@ sudo systemctl start salary-management.service
 - The API container currently initializes the schema with `prisma db push` from its Docker entrypoint.
 - When checked-in Prisma migrations are available, this can be tightened to `prisma migrate deploy`.
 - Redis is optional in the current API configuration. If you add it later, keep its connection string in `/etc/salary-management/api.env`, not in the repo.
+
+## Future Path
+
+The current EC2 setup is intentionally a simple MVP deployment shape, not the final infrastructure target.
+
+A practical evolution path is:
+
+- Single EC2 instance -> managed PostgreSQL on Amazon RDS
+- Redis container -> Amazon ElastiCache
+- API container on EC2 -> Amazon ECS/Fargate
+- Frontend hosting -> Amazon S3 + CloudFront
+- Structured logs and operational signals -> Amazon CloudWatch
+
+This staged path keeps the early deployment simple while giving each moving part a clean managed-service destination:
+
+- RDS removes database operations from the application host
+- ElastiCache externalizes Redis so rate limiting and cache state can be shared safely
+- ECS/Fargate removes most host management for the API container
+- S3/CloudFront gives the frontend low-cost static hosting with CDN distribution
+- CloudWatch centralizes logs, alarms, and health visibility
+
+Because the codebase already separates the frontend, API, data stores, health checks, and structured logging concerns, this migration can happen incrementally instead of as a full replatforming event.
