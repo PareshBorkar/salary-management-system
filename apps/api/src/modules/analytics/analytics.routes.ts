@@ -1,6 +1,7 @@
 import type { FastifyInstance } from "fastify";
 
 import { sendError } from "../../shared/http/errors.js";
+import { sendSuccess } from "../../shared/http/responses.js";
 import { getCompensationAnalytics } from "./analytics.service.js";
 
 export async function analyticsRoutes(app: FastifyInstance) {
@@ -14,7 +15,11 @@ export async function analyticsRoutes(app: FastifyInstance) {
         return sendError(reply, 401);
       }
 
-      return getCompensationAnalytics(request.requestContext.organizationId);
+      const analytics = await getCompensationAnalytics(
+        request.requestContext.organizationId
+      );
+
+      return sendSuccess(reply, analytics);
     }
   );
 }

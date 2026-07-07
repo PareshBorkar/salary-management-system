@@ -8,6 +8,22 @@ const validCredentials = {
   password: "Password123!"
 };
 
+type ApiSuccessResponse<TData> = {
+  success: true;
+  message: string;
+  data: TData;
+};
+
+type LoginResponse = {
+  token: string;
+  user: {
+    id: string;
+    email: string;
+    role: string;
+    organizationId: string;
+  };
+};
+
 describe("authentication behavior", () => {
   let app: FastifyInstance | undefined;
 
@@ -29,24 +45,20 @@ describe("authentication behavior", () => {
 
     expect(response.statusCode).toBe(200);
 
-    const body = response.json<{
-      token: string;
-      user: {
-        id: string;
-        email: string;
-        role: string;
-        organizationId: string;
-      };
-    }>();
+    const body = response.json<ApiSuccessResponse<LoginResponse>>();
 
-    expect(body.token).toEqual(expect.any(String));
-    expect(body.token.split(".")).toHaveLength(3);
-    expect(body.user).toMatchObject({
+    expect(body).toMatchObject({
+      success: true,
+      message: "Request completed successfully"
+    });
+    expect(body.data.token).toEqual(expect.any(String));
+    expect(body.data.token.split(".")).toHaveLength(3);
+    expect(body.data.user).toMatchObject({
       email: validCredentials.email,
       role: "HR_MANAGER"
     });
-    expect(body.user.id).toEqual(expect.any(String));
-    expect(body.user.organizationId).toEqual(expect.any(String));
+    expect(body.data.user.id).toEqual(expect.any(String));
+    expect(body.data.user.organizationId).toEqual(expect.any(String));
   });
 
   it("rejects invalid login credentials", async () => {

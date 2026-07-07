@@ -59,6 +59,12 @@ type CompensationAnalyticsResponse = {
   }>;
 };
 
+type ApiSuccessResponse<TData> = {
+  success: true;
+  message: string;
+  data: TData;
+};
+
 describe("compensation analytics behavior", () => {
   let app: FastifyInstance | undefined;
 
@@ -84,7 +90,8 @@ describe("compensation analytics behavior", () => {
 
     expect(response.statusCode).toBe(200);
 
-    const body = response.json<CompensationAnalyticsResponse>();
+    const body = response.json<ApiSuccessResponse<CompensationAnalyticsResponse>>();
+    const data = body.data;
     const salaries = Array.from({ length: seededEmployeeCount }, (_, index) =>
       seededSalary(index + 1)
     ).sort((a, b) => a - b);
@@ -92,9 +99,13 @@ describe("compensation analytics behavior", () => {
     const expectedAverageSalary = expectedTotalPayroll / salaries.length;
     const expectedMedianSalary = (salaries[49]! + salaries[50]!) / 2;
 
-    expect(body.totalPayroll).toBe(expectedTotalPayroll);
-    expect(body.averageSalary).toBeCloseTo(expectedAverageSalary, 2);
-    expect(body.medianSalary).toBe(expectedMedianSalary);
+    expect(body).toMatchObject({
+      success: true,
+      message: "Request completed successfully"
+    });
+    expect(data.totalPayroll).toBe(expectedTotalPayroll);
+    expect(data.averageSalary).toBeCloseTo(expectedAverageSalary, 2);
+    expect(data.medianSalary).toBe(expectedMedianSalary);
   });
 
   it("returns employee count by country", async () => {
@@ -108,9 +119,10 @@ describe("compensation analytics behavior", () => {
 
     expect(response.statusCode).toBe(200);
 
-    const body = response.json<CompensationAnalyticsResponse>();
+    const body = response.json<ApiSuccessResponse<CompensationAnalyticsResponse>>();
+    const data = body.data;
 
-    expect(body.countByCountry).toEqual(
+    expect(data.countByCountry).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           country: "US",
@@ -118,7 +130,7 @@ describe("compensation analytics behavior", () => {
         })
       ])
     );
-    expect(sortCountryCounts(body.countByCountry)).toEqual(
+    expect(sortCountryCounts(data.countByCountry)).toEqual(
       sortCountryCounts(expectedCountryCounts())
     );
   });
@@ -134,9 +146,10 @@ describe("compensation analytics behavior", () => {
 
     expect(response.statusCode).toBe(200);
 
-    const body = response.json<CompensationAnalyticsResponse>();
+    const body = response.json<ApiSuccessResponse<CompensationAnalyticsResponse>>();
+    const data = body.data;
 
-    expect(body.averageByDepartment).toEqual(
+    expect(data.averageByDepartment).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           department: "Engineering",
@@ -145,9 +158,9 @@ describe("compensation analytics behavior", () => {
       ])
     );
 
-    expect(body.averageByDepartment).toHaveLength(departments.length);
+    expect(data.averageByDepartment).toHaveLength(departments.length);
     for (const expectedDepartmentAverage of expectedDepartmentAverages()) {
-      const actualDepartmentAverage = body.averageByDepartment.find(
+      const actualDepartmentAverage = data.averageByDepartment.find(
         (item) => item.department === expectedDepartmentAverage.department
       );
 
@@ -169,9 +182,10 @@ describe("compensation analytics behavior", () => {
 
     expect(response.statusCode).toBe(200);
 
-    const body = response.json<CompensationAnalyticsResponse>();
+    const body = response.json<ApiSuccessResponse<CompensationAnalyticsResponse>>();
+    const data = body.data;
 
-    expect(body.salaryBands).toEqual(
+    expect(data.salaryBands).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           label: "$50k-$75k",
@@ -187,12 +201,12 @@ describe("compensation analytics behavior", () => {
         })
       ])
     );
-    const salaryBandCount = body.salaryBands.reduce(
+    const salaryBandCount = data.salaryBands.reduce(
       (total, item) => total + item.count,
       0
     );
 
-    expect(body.salaryBands).toEqual(expectedSalaryBands());
+    expect(data.salaryBands).toEqual(expectedSalaryBands());
     expect(salaryBandCount).toBe(seededEmployeeCount);
   });
 

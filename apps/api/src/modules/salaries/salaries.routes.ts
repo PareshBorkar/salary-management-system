@@ -1,6 +1,7 @@
 import type { FastifyInstance } from "fastify";
 
 import { sendError } from "../../shared/http/errors.js";
+import { sendSuccess } from "../../shared/http/responses.js";
 import { updateEmployeeSalary } from "./salaries.service.js";
 import {
   salaryUpdateBodySchema,
@@ -38,7 +39,7 @@ export async function salaryRoutes(app: FastifyInstance) {
         return sendError(reply, 404, "Employee not found");
       }
 
-      return reply.send(result);
+      return sendSuccess(reply, result);
     }
   );
 }

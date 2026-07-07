@@ -5,6 +5,7 @@ import { z } from "zod";
 import { signJwt, type AuthenticatedUser } from "../../shared/auth/jwt.js";
 import { prisma } from "../../shared/database/prisma.js";
 import { sendError } from "../../shared/http/errors.js";
+import { sendSuccess } from "../../shared/http/responses.js";
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -45,7 +46,7 @@ export async function authRoutes(app: FastifyInstance) {
       organizationId: user.organizationId
     };
 
-    return reply.send({
+    return sendSuccess(reply, {
       token: signJwt(authenticatedUser),
       user: authenticatedUser
     });

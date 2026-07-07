@@ -31,6 +31,29 @@ function authorizationHeader(token = authToken) {
   };
 }
 
+type ApiSuccessResponse<TData> = {
+  success: true;
+  message: string;
+  data: TData;
+};
+
+type SalaryUpdateResponse = {
+  salary: {
+    amount: number;
+    effectiveFrom: string;
+  };
+  salaryHistory: {
+    previousAmount: number;
+    newAmount: number;
+    reason: string;
+    updatedById: string | null;
+    changedBy: {
+      id: string;
+      email: string;
+    };
+  };
+};
+
 describe("salary update behavior", () => {
   let app: FastifyInstance | undefined;
 
@@ -103,34 +126,23 @@ describe("salary update behavior", () => {
 
     expect(response.statusCode).toBe(200);
 
-    const body = response.json<{
-      salary: {
-        amount: number;
-        effectiveFrom: string;
-      };
-      salaryHistory: {
-        previousAmount: number;
-        newAmount: number;
-        reason: string;
-        updatedById: string | null;
-        changedBy: {
-          id: string;
-          email: string;
-        };
-      };
-    }>();
+    const body = response.json<ApiSuccessResponse<SalaryUpdateResponse>>();
 
-    expect(body.salary).toMatchObject({
+    expect(body).toMatchObject({
+      success: true,
+      message: "Request completed successfully"
+    });
+    expect(body.data.salary).toMatchObject({
       amount: 125000,
       effectiveFrom: "2026-03-01T00:00:00.000Z"
     });
-    expect(body.salaryHistory).toMatchObject({
+    expect(body.data.salaryHistory).toMatchObject({
       previousAmount: 90000,
       newAmount: 125000,
       reason: "MERIT",
       updatedById: userId
     });
-    expect(body.salaryHistory.changedBy).toMatchObject({
+    expect(body.data.salaryHistory.changedBy).toMatchObject({
       id: userId,
       email: "salary.test.hr@acme.example"
     });
