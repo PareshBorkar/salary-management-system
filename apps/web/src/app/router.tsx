@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { createBrowserRouter, Navigate } from "react-router-dom";
 
 import { AppLayout } from "../components/AppLayout";
@@ -7,40 +8,30 @@ import { DashboardPage } from "../pages/Dashboard/DashboardPage";
 import { EmployeeDetailPage } from "../pages/Employees/EmployeeDetailPage";
 import { EmployeesPage } from "../pages/Employees/EmployeesPage";
 
+function protectedAppPage(page: ReactNode) {
+  return (
+    <ProtectedRoute>
+      <AppLayout>{page}</AppLayout>
+    </ProtectedRoute>
+  );
+}
+
 export const router = createBrowserRouter([
-  {
-    path: "/",
-    element: (
-      <ProtectedRoute>
-        <AppLayout>
-          <DashboardPage />
-        </AppLayout>
-      </ProtectedRoute>
-    )
-  },
   {
     path: "/login",
     element: <LoginPage />
   },
   {
+    path: "/",
+    element: protectedAppPage(<DashboardPage />)
+  },
+  {
     path: "/employees",
-    element: (
-      <ProtectedRoute>
-        <AppLayout>
-          <EmployeesPage />
-        </AppLayout>
-      </ProtectedRoute>
-    )
+    element: protectedAppPage(<EmployeesPage />)
   },
   {
     path: "/employees/:employeeId",
-    element: (
-      <ProtectedRoute>
-        <AppLayout>
-          <EmployeeDetailPage />
-        </AppLayout>
-      </ProtectedRoute>
-    )
+    element: protectedAppPage(<EmployeeDetailPage />)
   },
   {
     path: "*",
