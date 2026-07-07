@@ -1,50 +1,62 @@
+/* @vitest-environment jsdom */
+import { render, screen, waitFor } from "@testing-library/react";
 import { renderToString } from "react-dom/server";
-import { Navigate } from "react-router-dom";
+import { MemoryRouter, Navigate, Route, Routes } from "react-router-dom";
 import { StaticRouter } from "react-router-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import {
+  clearSessionToken,
+  notifySessionExpired,
+  setSessionToken
+} from "../../../src/api/session";
 import { AppLayout } from "../../../src/components/AppLayout";
 import { ProtectedRoute } from "../../../src/components/ProtectedRoute";
 import { DashboardPage } from "../../../src/pages/Dashboard/DashboardPage";
 
-const tokenKey = "salary-management-token";
+function setToken(token: string | null) {
+  clearSessionToken();
 
-function stubLocalStorage(token: string | null) {
-  vi.stubGlobal("localStorage", {
-    getItem: vi.fn((key: string) => (key === tokenKey ? token : null)),
-    setItem: vi.fn(),
-    removeItem: vi.fn(),
-    clear: vi.fn()
-  });
+  if (token) {
+    setSessionToken(token);
+  }
 }
 
 describe("protected app layout behavior", () => {
   beforeEach(() => {
     vi.unstubAllGlobals();
+    clearSessionToken();
   });
 
   afterEach(() => {
+    clearSessionToken();
     vi.unstubAllGlobals();
   });
 
   it("redirects protected routes to login when unauthenticated", () => {
-    stubLocalStorage(null);
+    setToken(null);
 
-    const element = ProtectedRoute({
-      children: <DashboardPage />
-    });
+    render(
+      <MemoryRouter initialEntries={["/"]}>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <DashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/login" element={<div>Login page</div>} />
+        </Routes>
+      </MemoryRouter>
+    );
 
-    expect(element).toMatchObject({
-      type: Navigate,
-      props: {
-        to: "/login",
-        replace: true
-      }
-    });
+    expect(screen.getByText("Login page")).toBeTruthy();
   });
 
   it("allows authenticated access to protected content", () => {
-    stubLocalStorage("valid-token");
+    setToken("valid-token");
 
     const html = renderToString(
       <StaticRouter location="/">
@@ -84,5 +96,32 @@ describe("protected app layout behavior", () => {
 
     expect(html).toContain('href="/"');
     expect(html).toContain('href="/employees"');
+  });
+
+  it("redirects to login after a session-expired event clears authentication", async () => {
+    setToken("valid-token");
+
+    render(
+      <MemoryRouter initialEntries={["/"]}>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <div>Secure dashboard</div>
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/login" element={<div>Login page</div>} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText("Secure dashboard")).toBeTruthy();
+
+    clearSessionToken();
+    notifySessionExpired();
+
+    await waitFor(() => expect(screen.getByText("Login page")).toBeTruthy());
   });
 });
