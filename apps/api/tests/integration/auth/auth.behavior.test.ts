@@ -75,9 +75,16 @@ describe("authentication behavior", () => {
 
     expect(response.statusCode).toBe(401);
 
-    const body = response.json<{ error: string; token?: string }>();
+    const body = response.json<{
+      success: false;
+      message: string;
+      token?: string;
+    }>();
 
-    expect(body.error).toEqual(expect.any(String));
+    expect(body).toMatchObject({
+      success: false,
+      message: expect.any(String)
+    });
     expect(body.token).toBeUndefined();
   });
 

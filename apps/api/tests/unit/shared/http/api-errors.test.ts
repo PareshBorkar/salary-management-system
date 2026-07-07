@@ -17,7 +17,8 @@ describe("createErrorResponse", () => {
     [500, "INTERNAL_SERVER_ERROR", "Internal server error"]
   ] as const)("standardizes %s responses", (statusCode, code, defaultMessage) => {
     expect(createErrorResponse(statusCode)).toEqual({
-      error: defaultMessage,
+      success: false,
+      message: defaultMessage,
       code,
       statusCode
     });
@@ -25,7 +26,8 @@ describe("createErrorResponse", () => {
 
   it("allows route-specific messages", () => {
     expect(createErrorResponse(404, "Employee not found")).toEqual({
-      error: "Employee not found",
+      success: false,
+      message: "Employee not found",
       code: "NOT_FOUND",
       statusCode: 404
     });
@@ -68,7 +70,8 @@ describe("common API error responses", () => {
 
     expect(response.statusCode).toBe(400);
     expect(response.json()).toMatchObject({
-      error: expect.any(String),
+      success: false,
+      message: expect.any(String),
       code: "BAD_REQUEST",
       statusCode: 400
     });
@@ -85,7 +88,8 @@ describe("common API error responses", () => {
 
     expect(response.statusCode).toBe(401);
     expect(response.json()).toEqual({
-      error: "Authentication required",
+      success: false,
+      message: "Authentication required",
       code: "UNAUTHORIZED",
       statusCode: 401
     });
@@ -102,7 +106,8 @@ describe("common API error responses", () => {
 
     expect(response.statusCode).toBe(403);
     expect(response.json()).toEqual({
-      error: "Forbidden",
+      success: false,
+      message: "Forbidden",
       code: "FORBIDDEN",
       statusCode: 403
     });
@@ -118,7 +123,8 @@ describe("common API error responses", () => {
 
     expect(response.statusCode).toBe(404);
     expect(response.json()).toEqual({
-      error: "Not found",
+      success: false,
+      message: "Not found",
       code: "NOT_FOUND",
       statusCode: 404
     });
@@ -138,7 +144,8 @@ describe("common API error responses", () => {
     expect(response.statusCode).toBe(429);
     expect(response.headers["retry-after"]).toBe("60");
     expect(response.json()).toEqual({
-      error: "Too many requests",
+      success: false,
+      message: "Too many requests",
       code: "RATE_LIMITED",
       statusCode: 429
     });
@@ -157,7 +164,8 @@ describe("common API error responses", () => {
 
     expect(response.statusCode).toBe(500);
     expect(response.json()).toEqual({
-      error: "Internal server error",
+      success: false,
+      message: "Internal server error",
       code: "INTERNAL_SERVER_ERROR",
       statusCode: 500
     });

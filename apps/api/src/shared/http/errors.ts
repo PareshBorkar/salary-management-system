@@ -29,7 +29,8 @@ const defaultMessageByStatus: Record<ErrorStatusCode, string> = {
 };
 
 export type ErrorResponse = {
-  error: string;
+  success: false;
+  message: string;
   code: ErrorCode;
   statusCode: ErrorStatusCode;
 };
@@ -39,7 +40,8 @@ export function createErrorResponse(
   message = defaultMessageByStatus[statusCode]
 ): ErrorResponse {
   return {
-    error: message,
+    success: false,
+    message,
     code: errorCodeByStatus[statusCode],
     statusCode
   };
