@@ -1,5 +1,6 @@
 import type { FastifyInstance } from "fastify";
 
+import { sendError } from "../../shared/http/errors.js";
 import { listEmployeeSalaryRecords } from "./employees.service.js";
 import { employeeListQuerySchema } from "./employees.validation.js";
 
@@ -11,13 +12,13 @@ export async function employeeRoutes(app: FastifyInstance) {
     },
     async (request, reply) => {
       if (!request.requestContext) {
-        return reply.code(401).send({ error: "Authentication required" });
+        return sendError(reply, 401);
       }
 
       const parsed = employeeListQuerySchema.safeParse(request.query);
 
       if (!parsed.success) {
-        return reply.code(400).send({ error: "Invalid employee list query" });
+        return sendError(reply, 400);
       }
 
       return listEmployeeSalaryRecords({
