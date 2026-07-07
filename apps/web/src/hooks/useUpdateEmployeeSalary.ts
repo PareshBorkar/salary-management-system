@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { getApiErrorMessage } from "../api/responses";
 import {
   updateEmployeeSalary,
   type UpdateEmployeeSalaryRequest,
@@ -23,8 +24,10 @@ export function useUpdateEmployeeSalary() {
       const response = await updateEmployeeSalary(employeeId, payload);
       setSuccessMessage("Salary updated successfully.");
       return response;
-    } catch {
-      setErrorMessage("Unable to update salary. Please try again.");
+    } catch (error) {
+      setErrorMessage(
+        getApiErrorMessage(error, "Unable to update salary. Please try again.")
+      );
       return null;
     } finally {
       setIsSubmitting(false);

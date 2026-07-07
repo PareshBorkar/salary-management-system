@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 
+import { getApiErrorMessage } from "../api/responses";
 import {
   listEmployees,
   type Employee,
@@ -64,14 +65,16 @@ export function useEmployeesTable() {
 
         setEmployees(response.employees);
         setTotal(response.pagination.total);
-      } catch {
+      } catch (error) {
         if (!isActive) {
           return;
         }
 
         setEmployees([]);
         setTotal(0);
-        setErrorMessage("Unable to load employees. Please try again.");
+        setErrorMessage(
+          getApiErrorMessage(error, "Unable to load employees. Please try again.")
+        );
       } finally {
         if (isActive) {
           setIsLoading(false);
