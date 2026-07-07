@@ -1,8 +1,9 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import type { FastifyInstance } from "fastify";
 
 import { createApp } from "../../../src/app.js";
 import { signJwt } from "../../../src/shared/auth/jwt.js";
+import { prisma } from "../../../src/shared/database/prisma.js";
 
 const organizationId = "seed-org-acme";
 const authToken = signJwt({
@@ -60,6 +61,10 @@ type CompensationAnalyticsResponse = {
 
 describe("compensation analytics behavior", () => {
   let app: FastifyInstance | undefined;
+
+  beforeAll(async () => {
+    await resetSeedAnalyticsData();
+  });
 
   afterEach(async () => {
     if (app) {
@@ -209,6 +214,79 @@ function seededSalary(index: number) {
   const variance = (index % 31) * 650;
 
   return 45_000 + departmentBand + levelBand + variance;
+}
+
+async function resetSeedAnalyticsData() {
+  const employeeIds = Array.from({ length: seededEmployeeCount }, (_, offset) =>
+    seededEmployeeId(offset + 1)
+  );
+
+  await prisma.$transaction([
+    prisma.salaryHistory.deleteMany({
+      where: {
+        organizationId,
+        employeeId: {
+          notIn: employeeIds
+        }
+      }
+    }),
+    prisma.salary.deleteMany({
+      where: {
+        organizationId,
+        employeeId: {
+          notIn: employeeIds
+        }
+      }
+    }),
+    prisma.employee.deleteMany({
+      where: {
+        organizationId,
+        id: {
+          notIn: employeeIds
+        }
+      }
+    }),
+    ...employeeIds.map((employeeId, offset) => {
+      const index = offset + 1;
+
+      return prisma.employee.update({
+        where: { id: employeeId },
+        data: {
+          country: countries[index % countries.length],
+          department: departments[index % departments.length]
+        }
+      });
+    }),
+    ...employeeIds.map((employeeId, offset) => {
+      const index = offset + 1;
+
+      return prisma.salary.upsert({
+        where: {
+          organizationId_employeeId: {
+            organizationId,
+            employeeId
+          }
+        },
+        update: {
+          amount: seededSalary(index).toFixed(2),
+          currency: "USD",
+          effectiveFrom: new Date("2026-01-01")
+        },
+        create: {
+          id: `seed-salary-${String(index).padStart(5, "0")}`,
+          organizationId,
+          employeeId,
+          amount: seededSalary(index).toFixed(2),
+          currency: "USD",
+          effectiveFrom: new Date("2026-01-01")
+        }
+      });
+    })
+  ]);
+}
+
+function seededEmployeeId(index: number) {
+  return `seed-employee-${String(index).padStart(5, "0")}`;
 }
 
 function expectedCountryCounts() {
