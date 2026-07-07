@@ -264,6 +264,15 @@ Requires additional implementation effort compared to basic console logging.
 
 Logs and metrics can later be centralized using Amazon CloudWatch or another observability platform.
 
+The current path toward CloudWatch is intentionally incremental:
+
+- Keep request logs structured and machine-readable at the application layer
+- Use request IDs as the correlation key between client issues and backend events
+- Expose health checks for simple uptime probes and deeper dependency-aware checks
+- Preserve salary history separately as the business audit log for compensation events
+
+This avoids overloading infrastructure logs with business audit responsibilities while keeping a clean migration path toward centralized AWS monitoring.
+
 ---
 
 # 13. Tenant-Aware Data Model
