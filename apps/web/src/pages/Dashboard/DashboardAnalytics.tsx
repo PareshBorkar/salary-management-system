@@ -1,0 +1,49 @@
+import { useMemo } from "react";
+import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined";
+import { Button, Stack, Typography } from "@mui/material";
+
+import type { CompensationAnalytics } from "./dashboard.api";
+import { AnalyticsCards } from "./AnalyticsCards";
+import { AnalyticsCharts } from "./AnalyticsCharts";
+
+export function DashboardAnalytics({ analytics }: { analytics: CompensationAnalytics }) {
+  const totalEmployees = useMemo(
+    () => analytics.countByCountry.reduce((total, item) => total + item.count, 0),
+    [analytics.countByCountry]
+  );
+
+  return (
+    <Stack spacing={2.5}>
+      <Stack
+        direction={{ xs: "column", sm: "row" }}
+        spacing={1.5}
+        alignItems={{ xs: "stretch", sm: "center" }}
+        justifyContent="space-between"
+      >
+        <Stack spacing={0.5}>
+          <Typography variant="h1">Welcome back, HR Manager</Typography>
+          <Typography color="text.secondary">
+            Here's what's happening with compensation at ACME.
+          </Typography>
+        </Stack>
+        <Button
+          variant="outlined"
+          color="inherit"
+          startIcon={<CalendarTodayOutlinedIcon fontSize="small" />}
+          sx={{ alignSelf: { xs: "flex-start", sm: "center" } }}
+        >
+          May 1 - May 31, 2024
+        </Button>
+      </Stack>
+
+      <AnalyticsCards
+        totalEmployees={totalEmployees}
+        totalPayroll={analytics.totalPayroll}
+        averageSalary={analytics.averageSalary}
+        medianSalary={analytics.medianSalary}
+      />
+
+      <AnalyticsCharts analytics={analytics} totalEmployees={totalEmployees} />
+    </Stack>
+  );
+}

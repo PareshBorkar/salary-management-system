@@ -87,6 +87,8 @@ model Employee {
   @@unique([organizationId, employeeCode])
   @@unique([organizationId, email])
   @@index([organizationId])
+  @@index([organizationId, country, id])
+  @@index([organizationId, department, id])
   @@map("employees")
 }
 
@@ -105,6 +107,8 @@ model Salary {
   @@unique([organizationId, employeeId])
   @@index([organizationId])
   @@index([organizationId, employeeId])
+  @@index([organizationId, amount])
+  @@index([organizationId, employeeId, amount])
   @@map("salary")
 }
 

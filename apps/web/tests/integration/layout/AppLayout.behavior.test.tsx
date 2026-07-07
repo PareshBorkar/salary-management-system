@@ -54,7 +54,7 @@ describe("protected app layout behavior", () => {
       </StaticRouter>
     );
 
-    expect(html).toContain("Home Page");
+    expect(html).toContain("Loading dashboard analytics...");
   });
 
   it("renders the authenticated topbar and sidebar shell", () => {
@@ -70,7 +70,7 @@ describe("protected app layout behavior", () => {
     expect(html).toContain("ACME");
     expect(html).toContain("Dashboard");
     expect(html).toContain("Employees");
-    expect(html).toContain("Home Page");
+    expect(html).toContain("Loading dashboard analytics...");
   });
 
   it("renders navigation links for primary pages", () => {
