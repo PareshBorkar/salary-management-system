@@ -1,4 +1,5 @@
 import { apiClient } from "../../api";
+import { type ApiSuccessResponse, unwrapApiResponse } from "../../api/responses";
 
 export type Employee = {
   id: string;
@@ -71,22 +72,24 @@ export type UpdateEmployeeSalaryResponse = {
 };
 
 export async function listEmployees(params: EmployeeListRequest, signal?: AbortSignal) {
-  const response = await apiClient.get<EmployeeListResponse>("/employees", {
-    signal,
-    params
-  });
+  const response = await apiClient.get<ApiSuccessResponse<EmployeeListResponse>>(
+    "/employees",
+    {
+      signal,
+      params
+    }
+  );
 
-  return response.data;
+  return unwrapApiResponse(response.data);
 }
 
 export async function updateEmployeeSalary(
   employeeId: string,
   payload: UpdateEmployeeSalaryRequest
 ) {
-  const response = await apiClient.patch<UpdateEmployeeSalaryResponse>(
-    `/employees/${employeeId}/salary`,
-    payload
-  );
+  const response = await apiClient.patch<
+    ApiSuccessResponse<UpdateEmployeeSalaryResponse>
+  >(`/employees/${employeeId}/salary`, payload);
 
-  return response.data;
+  return unwrapApiResponse(response.data);
 }

@@ -1,4 +1,5 @@
 import { apiClient } from "../../api";
+import { type ApiSuccessResponse, unwrapApiResponse } from "../../api/responses";
 
 export type CompensationAnalytics = {
   totalPayroll: number;
@@ -33,9 +34,12 @@ export type CompensationAnalytics = {
 };
 
 export async function getCompensationAnalytics(signal?: AbortSignal) {
-  const response = await apiClient.get<CompensationAnalytics>("/analytics/compensation", {
-    signal
-  });
+  const response = await apiClient.get<ApiSuccessResponse<CompensationAnalytics>>(
+    "/analytics/compensation",
+    {
+      signal
+    }
+  );
 
-  return response.data;
+  return unwrapApiResponse(response.data);
 }

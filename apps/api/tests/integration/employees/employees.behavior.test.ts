@@ -42,6 +42,12 @@ type EmployeeListResponse = {
   };
 };
 
+type ApiSuccessResponse<TData> = {
+  success: true;
+  message: string;
+  data: TData;
+};
+
 describe("employee listing behavior", () => {
   let app: FastifyInstance | undefined;
 
@@ -63,15 +69,20 @@ describe("employee listing behavior", () => {
 
     expect(response.statusCode).toBe(200);
 
-    const body = response.json<EmployeeListResponse>();
+    const body = response.json<ApiSuccessResponse<EmployeeListResponse>>();
+    const data = body.data;
 
-    expect(body.employees).toHaveLength(25);
-    expect(body.pagination).toMatchObject({
+    expect(body).toMatchObject({
+      success: true,
+      message: "Request completed successfully"
+    });
+    expect(data.employees).toHaveLength(25);
+    expect(data.pagination).toMatchObject({
       page: 2,
       pageSize: 25
     });
-    expect(body.pagination.total).toBeGreaterThanOrEqual(25);
-    expect(body.pagination.totalPages).toBeGreaterThanOrEqual(1);
+    expect(data.pagination.total).toBeGreaterThanOrEqual(25);
+    expect(data.pagination.totalPages).toBeGreaterThanOrEqual(1);
   });
 
   it("searches employees by employee code or name", async () => {
@@ -85,10 +96,11 @@ describe("employee listing behavior", () => {
 
     expect(response.statusCode).toBe(200);
 
-    const body = response.json<EmployeeListResponse>();
+    const body = response.json<ApiSuccessResponse<EmployeeListResponse>>();
+    const data = body.data;
 
-    expect(body.employees.length).toBeGreaterThan(0);
-    expect(body.employees).toEqual(
+    expect(data.employees.length).toBeGreaterThan(0);
+    expect(data.employees).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           employeeCode: "ACME-00042"
@@ -108,10 +120,11 @@ describe("employee listing behavior", () => {
 
     expect(response.statusCode).toBe(200);
 
-    const body = response.json<EmployeeListResponse>();
+    const body = response.json<ApiSuccessResponse<EmployeeListResponse>>();
+    const data = body.data;
 
-    expect(body.employees.length).toBeGreaterThan(0);
-    expect(body.employees).toEqual(
+    expect(data.employees.length).toBeGreaterThan(0);
+    expect(data.employees).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           country: "US",
@@ -122,7 +135,7 @@ describe("employee listing behavior", () => {
       ])
     );
     expect(
-      body.employees.every(
+      data.employees.every(
         (employee) =>
           employee.country === "US" &&
           employee.department === "Engineering" &&
@@ -143,8 +156,8 @@ describe("employee listing behavior", () => {
 
     expect(response.statusCode).toBe(200);
 
-    const body = response.json<EmployeeListResponse>();
-    const salaries = body.employees.map((employee) => employee.salary?.amount ?? 0);
+    const body = response.json<ApiSuccessResponse<EmployeeListResponse>>();
+    const salaries = body.data.employees.map((employee) => employee.salary?.amount ?? 0);
 
     expect(salaries.length).toBeGreaterThan(1);
     expect(salaries).toEqual([...salaries].sort((a, b) => b - a));
@@ -161,11 +174,12 @@ describe("employee listing behavior", () => {
 
     expect(response.statusCode).toBe(200);
 
-    const body = response.json<EmployeeListResponse>();
+    const body = response.json<ApiSuccessResponse<EmployeeListResponse>>();
+    const data = body.data;
 
-    expect(body.employees.length).toBeGreaterThan(0);
+    expect(data.employees.length).toBeGreaterThan(0);
     expect(
-      body.employees.every((employee) => employee.organizationId === organizationId)
+      data.employees.every((employee) => employee.organizationId === organizationId)
     ).toBe(true);
   });
 });

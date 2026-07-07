@@ -1,4 +1,5 @@
 /* @vitest-environment jsdom */
+import { AxiosError, type InternalAxiosRequestConfig } from "axios";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -37,6 +38,35 @@ const successfulResponse: UpdateEmployeeSalaryResponse = {
     }
   }
 };
+
+function createApiError(message: string, status = 500) {
+  return new AxiosError(
+    message,
+    undefined,
+    {
+      headers: {},
+      method: "patch",
+      url: "/employees/employee-1/salary"
+    } as InternalAxiosRequestConfig,
+    undefined,
+    {
+      data: {
+        success: false,
+        message,
+        code: "REQUEST_FAILED",
+        statusCode: status
+      },
+      status,
+      statusText: "Error",
+      headers: {},
+      config: {
+        headers: {},
+        method: "patch",
+        url: "/employees/employee-1/salary"
+      } as InternalAxiosRequestConfig
+    }
+  );
+}
 
 describe("SalaryUpdateForm", () => {
   beforeEach(() => {
@@ -146,6 +176,29 @@ describe("SalaryUpdateForm", () => {
 
     expect(
       await screen.findByText("Unable to update salary. Please try again.")
+    ).toBeTruthy();
+  });
+
+  it("renders API error messages for salary update failures", async () => {
+    updateEmployeeSalaryMock.mockRejectedValue(
+      createApiError("Salary update requires a valid effective date.", 400)
+    );
+
+    render(<SalaryUpdateForm employeeId="employee-1" />);
+
+    await userEvent.type(
+      screen.getByRole("spinbutton", { name: /Annual Base Salary/ }),
+      "125000"
+    );
+    await userEvent.click(screen.getByRole("combobox", { name: /Reason/ }));
+    await userEvent.click(await screen.findByRole("option", { name: "Merit" }));
+    fireEvent.change(screen.getByRole("textbox", { name: "Effective From" }), {
+      target: { value: "2026-03-01" }
+    });
+    await userEvent.click(screen.getByRole("button", { name: "Save & Update" }));
+
+    expect(
+      await screen.findByText("Salary update requires a valid effective date.")
     ).toBeTruthy();
   });
 });

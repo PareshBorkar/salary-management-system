@@ -1,5 +1,7 @@
 import type { FastifyInstance } from "fastify";
 
+import { sendError } from "../../shared/http/errors.js";
+import { sendSuccess } from "../../shared/http/responses.js";
 import { updateEmployeeSalary } from "./salaries.service.js";
 import {
   salaryUpdateBodySchema,
@@ -14,14 +16,14 @@ export async function salaryRoutes(app: FastifyInstance) {
     },
     async (request, reply) => {
       if (!request.requestContext) {
-        return reply.code(401).send({ error: "Authentication required" });
+        return sendError(reply, 401);
       }
 
       const parsedParams = salaryUpdateParamsSchema.safeParse(request.params);
       const parsedBody = salaryUpdateBodySchema.safeParse(request.body);
 
       if (!parsedParams.success || !parsedBody.success) {
-        return reply.code(400).send({ error: "Invalid salary update request" });
+        return sendError(reply, 400);
       }
 
       const result = await updateEmployeeSalary({
@@ -34,10 +36,10 @@ export async function salaryRoutes(app: FastifyInstance) {
       });
 
       if (!result) {
-        return reply.code(404).send({ error: "Employee not found" });
+        return sendError(reply, 404, "Employee not found");
       }
 
-      return reply.send(result);
+      return sendSuccess(reply, result);
     }
   );
 }

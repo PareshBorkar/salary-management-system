@@ -1,6 +1,7 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
 
 import { verifyJwt } from "../auth/jwt.js";
+import { sendError } from "../http/errors.js";
 
 export async function authenticationMiddleware(
   request: FastifyRequest,
@@ -9,7 +10,7 @@ export async function authenticationMiddleware(
   const authorization = request.headers.authorization;
 
   if (!authorization?.startsWith("Bearer ")) {
-    await reply.code(401).send({ error: "Authentication required" });
+    await sendError(reply, 401);
     return;
   }
 
@@ -24,6 +25,6 @@ export async function authenticationMiddleware(
       role: currentUser.role
     };
   } catch {
-    await reply.code(401).send({ error: "Invalid or expired token" });
+    await sendError(reply, 401, "Invalid or expired token");
   }
 }

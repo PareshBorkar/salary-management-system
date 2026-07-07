@@ -1,4 +1,5 @@
 import { apiClient } from "../../api";
+import { type ApiSuccessResponse, unwrapApiResponse } from "../../api/responses";
 
 export type LoginRequest = {
   email: string;
@@ -16,7 +17,10 @@ export type LoginResponse = {
 };
 
 export async function login(credentials: LoginRequest) {
-  const response = await apiClient.post<LoginResponse>("/auth/login", credentials);
+  const response = await apiClient.post<ApiSuccessResponse<LoginResponse>>(
+    "/auth/login",
+    credentials
+  );
 
-  return response.data;
+  return unwrapApiResponse(response.data);
 }

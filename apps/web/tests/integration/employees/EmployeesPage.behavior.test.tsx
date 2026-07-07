@@ -1,4 +1,5 @@
 /* @vitest-environment jsdom */
+import { AxiosError, type InternalAxiosRequestConfig } from "axios";
 import {
   cleanup,
   fireEvent,
@@ -84,6 +85,35 @@ function renderEmployeesPage() {
   );
 }
 
+function createApiError(message: string, status = 500) {
+  return new AxiosError(
+    message,
+    undefined,
+    {
+      headers: {},
+      method: "get",
+      url: "/employees"
+    } as InternalAxiosRequestConfig,
+    undefined,
+    {
+      data: {
+        success: false,
+        message,
+        code: "REQUEST_FAILED",
+        statusCode: status
+      },
+      status,
+      statusText: "Error",
+      headers: {},
+      config: {
+        headers: {},
+        method: "get",
+        url: "/employees"
+      } as InternalAxiosRequestConfig
+    }
+  );
+}
+
 describe("EmployeesPage", () => {
   beforeEach(() => {
     listEmployeesMock.mockReset();
@@ -110,6 +140,18 @@ describe("EmployeesPage", () => {
 
     expect(
       await screen.findByText("Unable to load employees. Please try again.")
+    ).toBeTruthy();
+  });
+
+  it("renders API error messages from the backend response", async () => {
+    listEmployeesMock.mockRejectedValue(
+      createApiError("Session expired. Please sign in again.", 401)
+    );
+
+    renderEmployeesPage();
+
+    expect(
+      await screen.findByText("Session expired. Please sign in again.")
     ).toBeTruthy();
   });
 

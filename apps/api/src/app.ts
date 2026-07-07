@@ -6,6 +6,8 @@ import { env } from "./shared/config/env.js";
 import { loggerOptions } from "./shared/logger/logger.js";
 import { registerAuthentication } from "./shared/auth/authenticate.js";
 import { prisma } from "./shared/database/prisma.js";
+import { registerErrorHandlers } from "./shared/http/errors.js";
+import { registerRequestLogging } from "./shared/logger/request-logging.js";
 import { authRoutes } from "./modules/auth/auth.routes.js";
 import { employeeRoutes } from "./modules/employees/employees.routes.js";
 import { healthRoutes } from "./modules/health/health.routes.js";
@@ -23,12 +25,15 @@ export async function createApp(
     logger: options.logger ?? loggerOptions
   });
 
+  registerErrorHandlers(app);
+
   await app.register(helmet);
   await app.register(cors, {
     origin: env.CORS_ORIGIN
   });
 
   await registerAuthentication(app);
+  registerRequestLogging(app);
 
   await app.register(healthRoutes, { prefix: "/v1" });
   await app.register(authRoutes, { prefix: "/v1" });

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 
+import { getApiErrorMessage } from "../../api/responses";
 import { getCompensationAnalytics, type CompensationAnalytics } from "./dashboard.api";
 
 type CompensationAnalyticsState = {
@@ -32,7 +33,7 @@ export function useCompensationAnalytics() {
           errorMessage: null
         });
       })
-      .catch(() => {
+      .catch((error) => {
         if (abortController.signal.aborted) {
           return;
         }
@@ -40,7 +41,10 @@ export function useCompensationAnalytics() {
         setState({
           analytics: null,
           isLoading: false,
-          errorMessage: "Unable to load dashboard analytics. Please try again."
+          errorMessage: getApiErrorMessage(
+            error,
+            "Unable to load dashboard analytics. Please try again."
+          )
         });
       });
 

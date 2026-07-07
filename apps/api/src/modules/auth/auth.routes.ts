@@ -4,6 +4,8 @@ import { z } from "zod";
 
 import { signJwt, type AuthenticatedUser } from "../../shared/auth/jwt.js";
 import { prisma } from "../../shared/database/prisma.js";
+import { sendError } from "../../shared/http/errors.js";
+import { sendSuccess } from "../../shared/http/responses.js";
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -15,7 +17,7 @@ export async function authRoutes(app: FastifyInstance) {
     const parsed = loginSchema.safeParse(request.body);
 
     if (!parsed.success) {
-      return reply.code(400).send({ error: "Invalid login request" });
+      return sendError(reply, 400);
     }
 
     const user = await prisma.user.findUnique({
@@ -23,13 +25,13 @@ export async function authRoutes(app: FastifyInstance) {
     });
 
     if (!user?.isActive) {
-      return reply.code(401).send({ error: "Invalid email or password" });
+      return sendError(reply, 401, "Invalid email or password");
     }
 
     const passwordMatches = await bcrypt.compare(parsed.data.password, user.passwordHash);
 
     if (!passwordMatches) {
-      return reply.code(401).send({ error: "Invalid email or password" });
+      return sendError(reply, 401, "Invalid email or password");
     }
 
     await prisma.user.update({
@@ -44,7 +46,7 @@ export async function authRoutes(app: FastifyInstance) {
       organizationId: user.organizationId
     };
 
-    return reply.send({
+    return sendSuccess(reply, {
       token: signJwt(authenticatedUser),
       user: authenticatedUser
     });
