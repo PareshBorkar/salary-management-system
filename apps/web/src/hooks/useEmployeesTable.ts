@@ -5,7 +5,7 @@ import {
   listEmployees,
   type Employee,
   type EmployeeListRequest
-} from "../pages/Employees/employees.api";
+} from "../api/employees.api";
 
 export type EmployeeSortBy = EmployeeListRequest["sortBy"];
 export type EmployeeSortDirection = EmployeeListRequest["sortDirection"];

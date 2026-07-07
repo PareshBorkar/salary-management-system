@@ -1,4 +1,4 @@
-import type { SalaryChangeReason } from "./employees.api";
+import type { SalaryChangeReason } from "../../api/employees.api";
 
 export type SalaryUpdateFormValues = {
   amount: string;

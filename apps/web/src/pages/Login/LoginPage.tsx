@@ -21,7 +21,7 @@ import { useNavigate } from "react-router-dom";
 
 import { getApiErrorMessage } from "../../api/responses";
 import { setSessionToken } from "../../api/session";
-import { login } from "./login.api";
+import { login } from "../../api/login.api";
 
 export function LoginPage() {
   const navigate = useNavigate();

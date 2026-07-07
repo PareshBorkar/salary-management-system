@@ -5,7 +5,7 @@ import {
   updateEmployeeSalary,
   type UpdateEmployeeSalaryRequest,
   type UpdateEmployeeSalaryResponse
-} from "../pages/Employees/employees.api";
+} from "../api/employees.api";
 
 export function useUpdateEmployeeSalary() {
   const [isSubmitting, setIsSubmitting] = useState(false);

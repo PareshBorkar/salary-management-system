@@ -1,8 +1,8 @@
 import { Alert, CircularProgress, Paper, Stack, Typography } from "@mui/material";
 
-import type { CompensationAnalytics } from "./dashboard.api";
+import type { CompensationAnalytics } from "../../api/dashboard.api";
 import { DashboardAnalytics } from "./DashboardAnalytics";
-import { useCompensationAnalytics } from "./useCompensationAnalytics";
+import { useCompensationAnalytics } from "../../hooks/useCompensationAnalytics";
 
 export function DashboardPage() {
   const { analytics, isLoading, errorMessage } = useCompensationAnalytics();

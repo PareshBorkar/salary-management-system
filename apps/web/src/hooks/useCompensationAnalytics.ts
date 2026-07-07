@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 
-import { getApiErrorMessage } from "../../api/responses";
-import { getCompensationAnalytics, type CompensationAnalytics } from "./dashboard.api";
+import { getApiErrorMessage } from "../api/responses";
+import {
+  getCompensationAnalytics,
+  type CompensationAnalytics
+} from "../api/dashboard.api";
 
 type CompensationAnalyticsState = {
   analytics: CompensationAnalytics | null;

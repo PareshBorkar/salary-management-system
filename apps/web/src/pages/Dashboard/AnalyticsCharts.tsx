@@ -10,7 +10,7 @@ import {
 } from "@mui/material";
 
 import { formatCurrency } from "../Employees/SalaryDisplay";
-import type { CompensationAnalytics } from "./dashboard.api";
+import type { CompensationAnalytics } from "../../api/dashboard.api";
 
 type AnalyticsChartsProps = {
   analytics: CompensationAnalytics;

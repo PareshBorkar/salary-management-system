@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined";
 import { Button, Stack, Typography } from "@mui/material";
 
-import type { CompensationAnalytics } from "./dashboard.api";
+import type { CompensationAnalytics } from "../../api/dashboard.api";
 import { AnalyticsCards } from "./AnalyticsCards";
 import { AnalyticsCharts } from "./AnalyticsCharts";
 

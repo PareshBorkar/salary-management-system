@@ -2,7 +2,10 @@ import { type FormEvent, useState } from "react";
 import { Alert, Box, Button, MenuItem, Stack, TextField } from "@mui/material";
 
 import { useUpdateEmployeeSalary } from "../../hooks/useUpdateEmployeeSalary";
-import type { SalaryChangeReason, UpdateEmployeeSalaryResponse } from "./employees.api";
+import type {
+  SalaryChangeReason,
+  UpdateEmployeeSalaryResponse
+} from "../../api/employees.api";
 import {
   salaryChangeReasons,
   validateSalaryUpdate,

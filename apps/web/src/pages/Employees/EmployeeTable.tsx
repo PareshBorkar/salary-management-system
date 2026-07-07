@@ -16,7 +16,7 @@ import {
   Typography
 } from "@mui/material";
 
-import type { Employee } from "./employees.api";
+import type { Employee } from "../../api/employees.api";
 import { formatCountry } from "./employeeOptions";
 import type {
   EmployeeSortBy,
