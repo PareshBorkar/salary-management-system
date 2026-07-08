@@ -6,9 +6,10 @@ import { DashboardPage } from "../../../src/pages/Dashboard/DashboardPage";
 import {
   getCompensationAnalytics,
   type CompensationAnalytics
-} from "../../../src/pages/Dashboard/dashboard.api";
+} from "../../../src/api/dashboard.api";
+import { clearSessionUserDetails, setSessionUserDetails } from "../../../src/api/session";
 
-vi.mock("../../../src/pages/Dashboard/dashboard.api", async () => {
+vi.mock("../../../src/api/dashboard.api", async () => {
   return {
     getCompensationAnalytics: vi.fn()
   };
@@ -70,10 +71,12 @@ function analyticsResponse(
 describe("DashboardPage", () => {
   beforeEach(() => {
     getCompensationAnalyticsMock.mockReset();
+    clearSessionUserDetails();
   });
 
   afterEach(() => {
     cleanup();
+    clearSessionUserDetails();
   });
 
   it("renders the loading state", () => {
@@ -117,10 +120,19 @@ describe("DashboardPage", () => {
   });
 
   it("renders total employees, payroll, salary metrics, countries, and departments", async () => {
+    setSessionUserDetails({
+      firstName: "Priya",
+      lastName: "Nair",
+      organizationName: "Northstar Systems"
+    });
     getCompensationAnalyticsMock.mockResolvedValue(analyticsResponse());
 
     render(<DashboardPage />);
 
+    expect(await screen.findByText("Welcome back, Priya Nair")).toBeTruthy();
+    expect(
+      screen.getByText("Here's what's happening with compensation at Northstar Systems.")
+    ).toBeTruthy();
     expect(await screen.findByText("Total Employees")).toBeTruthy();
     expect(screen.getByText("10")).toBeTruthy();
     expect(screen.getByText("$1,250,000")).toBeTruthy();

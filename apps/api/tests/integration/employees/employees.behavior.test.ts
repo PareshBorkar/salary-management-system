@@ -3,6 +3,7 @@ import type { FastifyInstance } from "fastify";
 
 import { createApp } from "../../../src/app.js";
 import { signJwt } from "../../../src/shared/auth/jwt.js";
+import { prisma } from "../../../src/shared/database/prisma.js";
 
 const organizationId = "seed-org-acme";
 const authToken = signJwt({
@@ -48,10 +49,21 @@ type ApiSuccessResponse<TData> = {
   data: TData;
 };
 
+async function cleanupCreatedEmployee() {
+  await prisma.employee.deleteMany({
+    where: {
+      organizationId,
+      email: "neha.patel.test@acme.example"
+    }
+  });
+}
+
 describe("employee listing behavior", () => {
   let app: FastifyInstance | undefined;
 
   afterEach(async () => {
+    await cleanupCreatedEmployee();
+
     if (app) {
       await app.close();
       app = undefined;
@@ -181,5 +193,96 @@ describe("employee listing behavior", () => {
     expect(
       data.employees.every((employee) => employee.organizationId === organizationId)
     ).toBe(true);
+  });
+
+  it("creates an employee for the authenticated user's organization", async () => {
+    app = await createApp({ logger: false });
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/v1/employees",
+      headers: authorizationHeader(),
+      payload: {
+        firstName: "Neha",
+        lastName: "Patel",
+        email: "neha.patel.test@acme.example",
+        title: "Compensation Analyst",
+        department: "People",
+        country: "IN",
+        role: "HR",
+        level: "Senior"
+      }
+    });
+
+    expect(response.statusCode).toBe(201);
+
+    const body =
+      response.json<ApiSuccessResponse<EmployeeListResponse["employees"][number]>>();
+
+    expect(body).toMatchObject({
+      success: true,
+      message: "Employee created successfully",
+      data: {
+        organizationId,
+        employeeCode: "ACME-00101",
+        firstName: "Neha",
+        lastName: "Patel",
+        email: "neha.patel.test@acme.example",
+        title: "Compensation Analyst",
+        department: "People",
+        country: "IN",
+        role: "HR",
+        level: "Senior",
+        status: "ACTIVE",
+        salary: null
+      }
+    });
+  });
+
+  it("rejects invalid create employee payloads", async () => {
+    app = await createApp({ logger: false });
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/v1/employees",
+      headers: authorizationHeader(),
+      payload: {
+        firstName: "",
+        lastName: "Patel"
+      }
+    });
+
+    expect(response.statusCode).toBe(400);
+  });
+
+  it("returns conflict when employee code or email already exists", async () => {
+    app = await createApp({ logger: false });
+
+    const payload = {
+      firstName: "Neha",
+      lastName: "Patel",
+      email: "neha.patel.test@acme.example"
+    };
+
+    const firstResponse = await app.inject({
+      method: "POST",
+      url: "/v1/employees",
+      headers: authorizationHeader(),
+      payload
+    });
+    const secondResponse = await app.inject({
+      method: "POST",
+      url: "/v1/employees",
+      headers: authorizationHeader(),
+      payload
+    });
+
+    expect(firstResponse.statusCode).toBe(201);
+    expect(secondResponse.statusCode).toBe(409);
+    expect(secondResponse.json()).toMatchObject({
+      success: false,
+      message: "Employee email already exists.",
+      code: "CONFLICT"
+    });
   });
 });

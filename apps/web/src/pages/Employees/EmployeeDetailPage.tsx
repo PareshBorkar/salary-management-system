@@ -2,7 +2,7 @@ import { Alert, Stack } from "@mui/material";
 import { Link, useLocation, useParams } from "react-router-dom";
 
 import { EmployeeProfile, type EmployeeProfileData } from "./EmployeeProfile";
-import type { Employee } from "./employees.api";
+import type { Employee } from "../../api/employees.api";
 
 type EmployeeDetailLocationState = {
   employee?: Employee;

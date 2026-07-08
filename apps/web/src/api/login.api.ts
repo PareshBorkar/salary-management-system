@@ -1,5 +1,5 @@
-import { apiClient } from "../../api";
-import { type ApiSuccessResponse, unwrapApiResponse } from "../../api/responses";
+import { apiClient } from "./client";
+import { type ApiSuccessResponse, unwrapApiResponse } from "./responses";
 
 export type LoginRequest = {
   email: string;
@@ -11,8 +11,11 @@ export type LoginResponse = {
   user: {
     id: string;
     email: string;
+    firstName: string;
+    lastName: string;
     role: string;
     organizationId: string;
+    organizationName: string;
   };
 };
 

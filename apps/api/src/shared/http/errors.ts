@@ -1,12 +1,13 @@
 import type { FastifyInstance, FastifyReply } from "fastify";
 
-export type ErrorStatusCode = 400 | 401 | 403 | 404 | 429 | 500;
+export type ErrorStatusCode = 400 | 401 | 403 | 404 | 409 | 429 | 500;
 
 type ErrorCode =
   | "BAD_REQUEST"
   | "UNAUTHORIZED"
   | "FORBIDDEN"
   | "NOT_FOUND"
+  | "CONFLICT"
   | "RATE_LIMITED"
   | "INTERNAL_SERVER_ERROR";
 
@@ -15,6 +16,7 @@ const errorCodeByStatus = {
   401: "UNAUTHORIZED",
   403: "FORBIDDEN",
   404: "NOT_FOUND",
+  409: "CONFLICT",
   429: "RATE_LIMITED",
   500: "INTERNAL_SERVER_ERROR"
 } as const satisfies Record<ErrorStatusCode, ErrorCode>;
@@ -24,6 +26,7 @@ const defaultMessageByStatus: Record<ErrorStatusCode, string> = {
   401: "Authentication required",
   403: "Forbidden",
   404: "Not found",
+  409: "Conflict",
   429: "Too many requests",
   500: "Internal server error"
 };
@@ -95,6 +98,7 @@ function normalizeStatusCode(statusCode: number | undefined): ErrorStatusCode {
     statusCode === 401 ||
     statusCode === 403 ||
     statusCode === 404 ||
+    statusCode === 409 ||
     statusCode === 429
   ) {
     return statusCode;

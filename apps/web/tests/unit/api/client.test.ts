@@ -4,9 +4,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { apiClient } from "../../../src/api";
 import {
+  clearSessionUserDetails,
   clearSessionToken,
+  getSessionUserDetails,
   getSessionToken,
   sessionExpiredEventName,
+  setSessionUserDetails,
   setSessionToken
 } from "../../../src/api/session";
 
@@ -43,11 +46,18 @@ describe("api client unauthorized handling", () => {
   beforeEach(() => {
     vi.unstubAllGlobals();
     clearSessionToken();
+    clearSessionUserDetails();
     setSessionToken("valid-token");
+    setSessionUserDetails({
+      firstName: "Priya",
+      lastName: "Nair",
+      organizationName: "Northstar Systems"
+    });
   });
 
   afterEach(() => {
     clearSessionToken();
+    clearSessionUserDetails();
     vi.unstubAllGlobals();
   });
 
@@ -66,6 +76,7 @@ describe("api client unauthorized handling", () => {
     );
 
     expect(getSessionToken()).toBeNull();
+    expect(getSessionUserDetails()).toBeNull();
     expect(dispatchEventSpy).toHaveBeenCalledWith(expect.any(Event));
     expect(dispatchEventSpy.mock.calls[0]?.[0].type).toBe(sessionExpiredEventName);
   });
@@ -83,6 +94,11 @@ describe("api client unauthorized handling", () => {
     );
 
     expect(getSessionToken()).toBe("valid-token");
+    expect(getSessionUserDetails()).toMatchObject({
+      firstName: "Priya",
+      lastName: "Nair",
+      organizationName: "Northstar Systems"
+    });
     expect(dispatchEventSpy).not.toHaveBeenCalled();
   });
 });

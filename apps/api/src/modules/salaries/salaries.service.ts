@@ -1,4 +1,8 @@
-import { persistEmployeeSalaryUpdate } from "./salaries.repository.js";
+import {
+  findEmployeeSalaryDetails,
+  findEmployeeSalaryHistory,
+  persistEmployeeSalaryUpdate
+} from "./salaries.repository.js";
 
 export type UpdateEmployeeSalaryInput = {
   organizationId: string;
@@ -35,5 +39,71 @@ export async function updateEmployeeSalary(input: UpdateEmployeeSalaryInput) {
         email: result.updatedBy.email
       }
     }
+  };
+}
+
+export type GetEmployeeSalaryHistoryInput = {
+  organizationId: string;
+  employeeId: string;
+};
+
+export type GetEmployeeSalaryDetailsInput = {
+  organizationId: string;
+  employeeId: string;
+};
+
+export async function getEmployeeSalaryDetails(input: GetEmployeeSalaryDetailsInput) {
+  const employee = await findEmployeeSalaryDetails(input);
+
+  if (!employee) {
+    return null;
+  }
+
+  return {
+    employee: {
+      id: employee.id,
+      employeeCode: employee.employeeCode,
+      firstName: employee.firstName,
+      lastName: employee.lastName
+    },
+    salary: employee.salary
+      ? {
+          id: employee.salary.id,
+          amount: employee.salary.amount.toNumber(),
+          currency: employee.salary.currency,
+          effectiveFrom: employee.salary.effectiveFrom.toISOString(),
+          createdAt: employee.salary.createdAt.toISOString(),
+          updatedAt: employee.salary.updatedAt.toISOString()
+        }
+      : null
+  };
+}
+
+export async function getEmployeeSalaryHistory(input: GetEmployeeSalaryHistoryInput) {
+  const result = await findEmployeeSalaryHistory(input);
+
+  if (!result) {
+    return null;
+  }
+
+  return {
+    employee: result.employee,
+    salaryHistory: result.salaryHistory.map((salaryHistory) => ({
+      id: salaryHistory.id,
+      previousAmount: salaryHistory.previousAmount.toNumber(),
+      newAmount: salaryHistory.newAmount.toNumber(),
+      currency: salaryHistory.currency,
+      effectiveDate: salaryHistory.effectiveDate.toISOString(),
+      reason: salaryHistory.reason,
+      notes: salaryHistory.notes,
+      updatedById: salaryHistory.updatedById,
+      changedBy: salaryHistory.updatedBy
+        ? {
+            id: salaryHistory.updatedBy.id,
+            email: salaryHistory.updatedBy.email
+          }
+        : null,
+      createdAt: salaryHistory.createdAt.toISOString()
+    }))
   };
 }

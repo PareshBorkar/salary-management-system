@@ -14,17 +14,20 @@ import { MemoryRouter } from "react-router-dom";
 
 import { EmployeesPage } from "../../../src/pages/Employees/EmployeesPage";
 import {
+  createEmployee,
   listEmployees,
   type Employee,
   type EmployeeListResponse
-} from "../../../src/pages/Employees/employees.api";
+} from "../../../src/api/employees.api";
 
-vi.mock("../../../src/pages/Employees/employees.api", async () => {
+vi.mock("../../../src/api/employees.api", async () => {
   return {
+    createEmployee: vi.fn(),
     listEmployees: vi.fn()
   };
 });
 
+const createEmployeeMock = vi.mocked(createEmployee);
 const listEmployeesMock = vi.mocked(listEmployees);
 
 const employee: Employee = {
@@ -116,6 +119,7 @@ function createApiError(message: string, status = 500) {
 
 describe("EmployeesPage", () => {
   beforeEach(() => {
+    createEmployeeMock.mockReset();
     listEmployeesMock.mockReset();
   });
 
@@ -196,6 +200,84 @@ describe("EmployeesPage", () => {
     const employeeLink = await screen.findByRole("link", { name: "Aditi Sharma" });
 
     expect(employeeLink.getAttribute("href")).toBe("/employees/employee-1");
+  });
+
+  it("opens the add employee popup", async () => {
+    listEmployeesMock.mockResolvedValue(employeeResponse());
+
+    renderEmployeesPage();
+
+    await screen.findByText("Aditi Sharma");
+    await userEvent.click(screen.getByRole("button", { name: "Add Employee" }));
+
+    const dialog = screen.getByRole("dialog", { name: "Add Employee" });
+    const dialogQueries = within(dialog);
+
+    expect(dialogQueries.getByRole("textbox", { name: "First Name" })).toBeTruthy();
+    expect(dialogQueries.getByRole("textbox", { name: "Last Name" })).toBeTruthy();
+    expect(dialogQueries.getByRole("textbox", { name: "Email" })).toBeTruthy();
+    expect(dialogQueries.getByRole("combobox", { name: "Department" })).toBeTruthy();
+    expect(dialogQueries.getByRole("combobox", { name: "Country" })).toBeTruthy();
+
+    await userEvent.click(dialogQueries.getByRole("button", { name: "Cancel" }));
+
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog", { name: "Add Employee" })).toBeNull()
+    );
+  });
+
+  it("creates an employee from the add employee popup", async () => {
+    listEmployeesMock.mockResolvedValue(employeeResponse());
+    createEmployeeMock.mockResolvedValue({
+      ...employee,
+      id: "employee-2",
+      employeeCode: "ACME-00999",
+      firstName: "Neha",
+      lastName: "Patel",
+      email: "neha.patel@acme.example",
+      title: "Compensation Analyst",
+      salary: null
+    });
+
+    renderEmployeesPage();
+
+    await screen.findByText("Aditi Sharma");
+    await userEvent.click(screen.getByRole("button", { name: "Add Employee" }));
+
+    const dialog = screen.getByRole("dialog", { name: "Add Employee" });
+    const dialogQueries = within(dialog);
+
+    await userEvent.type(
+      dialogQueries.getByRole("textbox", { name: "First Name" }),
+      "Neha"
+    );
+    await userEvent.type(
+      dialogQueries.getByRole("textbox", { name: "Last Name" }),
+      "Patel"
+    );
+    await userEvent.type(
+      dialogQueries.getByRole("textbox", { name: "Email" }),
+      "neha.patel@acme.example"
+    );
+    await userEvent.type(
+      dialogQueries.getByRole("textbox", { name: "Title" }),
+      "Compensation Analyst"
+    );
+
+    await userEvent.click(dialogQueries.getByRole("button", { name: "Add Employee" }));
+
+    await waitFor(() =>
+      expect(createEmployeeMock).toHaveBeenCalledWith({
+        firstName: "Neha",
+        lastName: "Patel",
+        email: "neha.patel@acme.example",
+        title: "Compensation Analyst"
+      })
+    );
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog", { name: "Add Employee" })).toBeNull()
+    );
+    expect(listEmployeesMock).toHaveBeenCalledTimes(2);
   });
 
   it("requests the next page when pagination changes", async () => {

@@ -2,7 +2,10 @@ import { type FormEvent, useState } from "react";
 import { Alert, Box, Button, MenuItem, Stack, TextField } from "@mui/material";
 
 import { useUpdateEmployeeSalary } from "../../hooks/useUpdateEmployeeSalary";
-import type { SalaryChangeReason, UpdateEmployeeSalaryResponse } from "./employees.api";
+import type {
+  SalaryChangeReason,
+  UpdateEmployeeSalaryResponse
+} from "../../api/employees.api";
 import {
   salaryChangeReasons,
   validateSalaryUpdate,
@@ -25,10 +28,8 @@ export function SalaryUpdateForm({
   onCancel
 }: SalaryUpdateFormProps) {
   const [amount, setAmount] = useState("");
-  const [variableTarget, setVariableTarget] = useState("");
   const [reason, setReason] = useState("");
   const [effectiveDate, setEffectiveDate] = useState("");
-  const [notes, setNotes] = useState("");
   const [errors, setErrors] = useState<SalaryUpdateValidationErrors>({});
   const { mutate, isSubmitting, successMessage, errorMessage } =
     useUpdateEmployeeSalary();
@@ -60,7 +61,7 @@ export function SalaryUpdateForm({
   }
 
   return (
-    <Stack component="form" spacing={2} onSubmit={handleSubmit} noValidate>
+    <Stack component="form" sx={{ pt: 2 }} spacing={2} onSubmit={handleSubmit} noValidate>
       {successMessage ? <Alert severity="success">{successMessage}</Alert> : null}
       {errorMessage ? <Alert severity="error">{errorMessage}</Alert> : null}
 
@@ -70,11 +71,14 @@ export function SalaryUpdateForm({
 
       <TextField
         label="Effective From"
-        placeholder="YYYY-MM-DD"
+        type="date"
         value={effectiveDate}
         onChange={(event) => setEffectiveDate(event.target.value)}
         error={Boolean(errors.effectiveDate)}
         helperText={errors.effectiveDate}
+        InputLabelProps={{
+          shrink: true
+        }}
         size="small"
       />
 
@@ -102,15 +106,6 @@ export function SalaryUpdateForm({
       </Box>
 
       <TextField
-        label="Variable (Target)"
-        type="number"
-        value={variableTarget}
-        onChange={(event) => setVariableTarget(event.target.value)}
-        inputProps={{ min: 0, step: 0.01 }}
-        size="small"
-      />
-
-      <TextField
         select
         label="Reason"
         value={reason}
@@ -126,15 +121,6 @@ export function SalaryUpdateForm({
           </MenuItem>
         ))}
       </TextField>
-
-      <TextField
-        label="Notes"
-        value={notes}
-        onChange={(event) => setNotes(event.target.value)}
-        multiline
-        minRows={3}
-        size="small"
-      />
 
       <Stack direction="row" spacing={1.5} justifyContent="flex-end">
         <Button type="button" variant="outlined" color="inherit" onClick={onCancel}>

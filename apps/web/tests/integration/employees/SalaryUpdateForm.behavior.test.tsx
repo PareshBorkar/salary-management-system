@@ -8,9 +8,9 @@ import { SalaryUpdateForm } from "../../../src/pages/Employees/SalaryUpdateForm"
 import {
   updateEmployeeSalary,
   type UpdateEmployeeSalaryResponse
-} from "../../../src/pages/Employees/employees.api";
+} from "../../../src/api/employees.api";
 
-vi.mock("../../../src/pages/Employees/employees.api", async () => {
+vi.mock("../../../src/api/employees.api", async () => {
   return {
     updateEmployeeSalary: vi.fn()
   };
@@ -101,16 +101,16 @@ describe("SalaryUpdateForm", () => {
     expect(updateEmployeeSalaryMock).not.toHaveBeenCalled();
   });
 
-  it("validates effective date", async () => {
+  it("validates effective date input", async () => {
     render(<SalaryUpdateForm employeeId="employee-1" />);
 
-    fireEvent.change(screen.getByRole("textbox", { name: "Effective From" }), {
+    fireEvent.change(screen.getByLabelText("Effective From"), {
       target: { value: "invalid-date" }
     });
     await userEvent.click(screen.getByRole("button", { name: "Save & Update" }));
 
     expect(screen.getByText("Salary is required.")).toBeTruthy();
-    expect(screen.getByText("Effective date must be valid.")).toBeTruthy();
+    expect(screen.getByText("Effective date is required.")).toBeTruthy();
     expect(updateEmployeeSalaryMock).not.toHaveBeenCalled();
   });
 
@@ -121,7 +121,7 @@ describe("SalaryUpdateForm", () => {
       screen.getByRole("spinbutton", { name: /Annual Base Salary/ }),
       "125000"
     );
-    fireEvent.change(screen.getByRole("textbox", { name: "Effective From" }), {
+    fireEvent.change(screen.getByLabelText("Effective From"), {
       target: { value: "2026-03-01" }
     });
     await userEvent.click(screen.getByRole("button", { name: "Save & Update" }));
@@ -142,7 +142,7 @@ describe("SalaryUpdateForm", () => {
     );
     await userEvent.click(screen.getByRole("combobox", { name: /Reason/ }));
     await userEvent.click(await screen.findByRole("option", { name: "Merit" }));
-    fireEvent.change(screen.getByRole("textbox", { name: "Effective From" }), {
+    fireEvent.change(screen.getByLabelText("Effective From"), {
       target: { value: "2026-03-01" }
     });
     await userEvent.click(screen.getByRole("button", { name: "Save & Update" }));
@@ -169,7 +169,7 @@ describe("SalaryUpdateForm", () => {
     );
     await userEvent.click(screen.getByRole("combobox", { name: /Reason/ }));
     await userEvent.click(await screen.findByRole("option", { name: "Merit" }));
-    fireEvent.change(screen.getByRole("textbox", { name: "Effective From" }), {
+    fireEvent.change(screen.getByLabelText("Effective From"), {
       target: { value: "2026-03-01" }
     });
     await userEvent.click(screen.getByRole("button", { name: "Save & Update" }));
@@ -192,7 +192,7 @@ describe("SalaryUpdateForm", () => {
     );
     await userEvent.click(screen.getByRole("combobox", { name: /Reason/ }));
     await userEvent.click(await screen.findByRole("option", { name: "Merit" }));
-    fireEvent.change(screen.getByRole("textbox", { name: "Effective From" }), {
+    fireEvent.change(screen.getByLabelText("Effective From"), {
       target: { value: "2026-03-01" }
     });
     await userEvent.click(screen.getByRole("button", { name: "Save & Update" }));

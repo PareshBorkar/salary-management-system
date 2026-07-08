@@ -14,6 +14,25 @@ export type EmployeeSalaryRecordPage = {
   employees: EmployeeSalaryRecord[];
 };
 
+export type CreateEmployeeRecordInput = {
+  organizationId: string;
+  employeeCode: string;
+  firstName: string;
+  lastName: string;
+  email?: string;
+  title?: string;
+  department?: string;
+  country?: string;
+  role?: string;
+  level?: string;
+  status?: "ACTIVE" | "INACTIVE" | "TERMINATED";
+  hiredAt?: Date;
+};
+
+export type LastEmployeeCodeRecord = {
+  employeeCode: string;
+};
+
 export async function findEmployeeSalaryRecords(
   query: EmployeeListQuery
 ): Promise<EmployeeSalaryRecordPage> {
@@ -70,4 +89,34 @@ export async function findEmployeeSalaryRecords(
     total,
     employees
   };
+}
+
+export async function createEmployeeRecord(input: CreateEmployeeRecordInput) {
+  return prisma.employee.create({
+    data: input,
+    include: {
+      salary: true
+    }
+  });
+}
+
+export async function findLastEmployeeCode(
+  organizationId: string
+): Promise<LastEmployeeCodeRecord | null> {
+  return prisma.employee.findFirst({
+    where: {
+      organizationId
+    },
+    orderBy: [
+      {
+        createdAt: "desc"
+      },
+      {
+        id: "desc"
+      }
+    ],
+    select: {
+      employeeCode: true
+    }
+  });
 }

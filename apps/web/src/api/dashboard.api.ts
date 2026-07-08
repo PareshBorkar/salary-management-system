@@ -1,5 +1,5 @@
-import { apiClient } from "../../api";
-import { type ApiSuccessResponse, unwrapApiResponse } from "../../api/responses";
+import { apiClient } from "./client";
+import { type ApiSuccessResponse, unwrapApiResponse } from "./responses";
 
 export type CompensationAnalytics = {
   totalPayroll: number;

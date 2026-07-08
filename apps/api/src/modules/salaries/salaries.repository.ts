@@ -84,3 +84,85 @@ export async function persistEmployeeSalaryUpdate(
     };
   });
 }
+
+export type GetEmployeeSalaryHistoryInput = {
+  organizationId: string;
+  employeeId: string;
+};
+
+export type GetEmployeeSalaryDetailsInput = {
+  organizationId: string;
+  employeeId: string;
+};
+
+export async function findEmployeeSalaryDetails(input: GetEmployeeSalaryDetailsInput) {
+  return prisma.employee.findFirst({
+    where: {
+      id: input.employeeId,
+      organizationId: input.organizationId
+    },
+    select: {
+      id: true,
+      employeeCode: true,
+      firstName: true,
+      lastName: true,
+      salary: {
+        select: {
+          id: true,
+          amount: true,
+          currency: true,
+          effectiveFrom: true,
+          createdAt: true,
+          updatedAt: true
+        }
+      }
+    }
+  });
+}
+
+export async function findEmployeeSalaryHistory(input: GetEmployeeSalaryHistoryInput) {
+  const employee = await prisma.employee.findFirst({
+    where: {
+      id: input.employeeId,
+      organizationId: input.organizationId
+    },
+    select: {
+      id: true,
+      employeeCode: true,
+      firstName: true,
+      lastName: true
+    }
+  });
+
+  if (!employee) {
+    return null;
+  }
+
+  const salaryHistory = await prisma.salaryHistory.findMany({
+    where: {
+      employeeId: input.employeeId,
+      organizationId: input.organizationId
+    },
+    orderBy: [
+      {
+        effectiveDate: "desc"
+      },
+      {
+        createdAt: "desc"
+      }
+    ],
+    include: {
+      updatedBy: {
+        select: {
+          id: true,
+          email: true
+        }
+      }
+    }
+  });
+
+  return {
+    employee,
+    salaryHistory
+  };
+}

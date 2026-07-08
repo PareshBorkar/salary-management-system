@@ -4,6 +4,10 @@ export const salaryUpdateParamsSchema = z.object({
   employeeId: z.string().trim().min(1)
 });
 
+export const salaryDetailsParamsSchema = salaryUpdateParamsSchema;
+
+export const salaryHistoryParamsSchema = salaryUpdateParamsSchema;
+
 export const salaryUpdateBodySchema = z.object({
   amount: z
     .number({

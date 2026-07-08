@@ -1,6 +1,11 @@
 import axios, { AxiosError } from "axios";
 
-import { clearSessionToken, getSessionToken, notifySessionExpired } from "./session";
+import {
+  clearSessionToken,
+  clearSessionUserDetails,
+  getSessionToken,
+  notifySessionExpired
+} from "./session";
 
 const baseURL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000/v1";
 
@@ -31,6 +36,7 @@ apiClient.interceptors.response.use(
       error.config?.url !== "/auth/login"
     ) {
       clearSessionToken();
+      clearSessionUserDetails();
       notifySessionExpired();
     }
 
