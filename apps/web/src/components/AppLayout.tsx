@@ -19,7 +19,14 @@ import {
   Typography
 } from "@mui/material";
 
-import { clearSessionToken, notifySessionExpired } from "../api/session";
+import {
+  clearSessionToken,
+  clearSessionUserDetails,
+  getSessionOrganizationName,
+  getSessionUserDetails,
+  getSessionUserDisplayName,
+  notifySessionExpired
+} from "../api/session";
 
 const expandedSidebarWidth = 240;
 const collapsedSidebarWidth = 72;
@@ -42,10 +49,16 @@ export function AppLayout({ children }: PropsWithChildren) {
   const [accountMenuAnchor, setAccountMenuAnchor] = useState<HTMLElement | null>(null);
   const sidebarWidth = isSidebarCollapsed ? collapsedSidebarWidth : expandedSidebarWidth;
   const isAccountMenuOpen = Boolean(accountMenuAnchor);
+  const userDetails = getSessionUserDetails();
+  const organizationName = getSessionOrganizationName();
+  const userDisplayName = getSessionUserDisplayName();
+  const avatarLabel =
+    `${userDetails?.firstName.at(0) ?? ""}${userDetails?.lastName.at(0) ?? ""}` || "U";
 
   function handleLogout() {
     setAccountMenuAnchor(null);
     clearSessionToken();
+    clearSessionUserDetails();
     notifySessionExpired();
   }
 
@@ -77,10 +90,10 @@ export function AppLayout({ children }: PropsWithChildren) {
           <Stack direction="row" spacing={1.25} alignItems="center">
             <Box textAlign="right">
               <Typography fontWeight={700} lineHeight={1.1}>
-                ACME
+                {organizationName}
               </Typography>
               <Typography variant="caption" color="text.secondary">
-                HR Manager
+                {userDisplayName}
               </Typography>
             </Box>
             <IconButton
@@ -91,7 +104,7 @@ export function AppLayout({ children }: PropsWithChildren) {
               onClick={(event) => setAccountMenuAnchor(event.currentTarget)}
               sx={{ p: 0 }}
             >
-              <Avatar sx={{ width: 36, height: 36 }}>A</Avatar>
+              <Avatar sx={{ width: 36, height: 36 }}>{avatarLabel}</Avatar>
             </IconButton>
           </Stack>
         </Toolbar>

@@ -19,9 +19,9 @@ import {
 import { type FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { getApiErrorMessage } from "../../api/responses";
-import { setSessionToken } from "../../api/session";
 import { login } from "../../api/login.api";
+import { getApiErrorMessage } from "../../api/responses";
+import { setSessionToken, setSessionUserDetails } from "../../api/session";
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -38,6 +38,11 @@ export function LoginPage() {
     try {
       const result = await login({ email, password });
       setSessionToken(result.token);
+      setSessionUserDetails({
+        firstName: result.user.firstName,
+        lastName: result.user.lastName,
+        organizationName: result.user.organizationName
+      });
       navigate("/");
     } catch (error) {
       setErrorMessage(getApiErrorMessage(error, "Invalid email or password."));
