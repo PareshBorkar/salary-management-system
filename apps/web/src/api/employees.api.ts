@@ -109,6 +109,23 @@ export type EmployeeSalaryHistoryResponse = {
   }>;
 };
 
+export type EmployeeSalaryResponse = {
+  employee: {
+    id: string;
+    employeeCode: string;
+    firstName: string;
+    lastName: string;
+  };
+  salary: {
+    id: string;
+    amount: number;
+    currency: string;
+    effectiveFrom: string;
+    createdAt: string;
+    updatedAt: string;
+  } | null;
+};
+
 export async function listEmployees(params: EmployeeListRequest, signal?: AbortSignal) {
   const response = await apiClient.get<ApiSuccessResponse<EmployeeListResponse>>(
     "/employees",
@@ -125,6 +142,17 @@ export async function createEmployee(payload: CreateEmployeeRequest) {
   const response = await apiClient.post<ApiSuccessResponse<Employee>>(
     "/employees",
     payload
+  );
+
+  return unwrapApiResponse(response.data);
+}
+
+export async function getEmployeeSalary(employeeId: string, signal?: AbortSignal) {
+  const response = await apiClient.get<ApiSuccessResponse<EmployeeSalaryResponse>>(
+    `/employees/${employeeId}/salary`,
+    {
+      signal
+    }
   );
 
   return unwrapApiResponse(response.data);

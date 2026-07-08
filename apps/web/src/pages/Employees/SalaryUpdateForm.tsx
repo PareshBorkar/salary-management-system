@@ -71,11 +71,14 @@ export function SalaryUpdateForm({
 
       <TextField
         label="Effective From"
-        placeholder="YYYY-MM-DD"
+        type="date"
         value={effectiveDate}
         onChange={(event) => setEffectiveDate(event.target.value)}
         error={Boolean(errors.effectiveDate)}
         helperText={errors.effectiveDate}
+        InputLabelProps={{
+          shrink: true
+        }}
         size="small"
       />
 

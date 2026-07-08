@@ -19,7 +19,11 @@ import {
   Typography
 } from "@mui/material";
 
-import type { EmployeeSalaryHistoryResponse } from "../../api/employees.api";
+import {
+  getEmployeeSalary,
+  getEmployeeSalaryHistory,
+  type EmployeeSalaryHistoryResponse
+} from "../../api/employees.api";
 import { useEmployeeSalaryHistory } from "../../hooks/useEmployeeSalaryHistory";
 import { useLocalCurrency } from "../../hooks/useLocalCurrency";
 import { formatCountry } from "./employeeOptions";
@@ -75,15 +79,20 @@ export type EmployeeProfileData = {
 export function EmployeeProfile({ employee }: { employee: EmployeeProfileData }) {
   const [isSalaryDialogOpen, setIsSalaryDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<EmployeeProfileTab>("overview");
+  const [currentSalary, setCurrentSalary] = useState(employee.salary);
   const [salaryHistory, setSalaryHistory] = useState(employee.salaryHistory);
   const [hasLoadedSalaryHistory, setHasLoadedSalaryHistory] = useState(false);
   const salaryHistoryLoader = useEmployeeSalaryHistory();
   const employeeName = `${employee.firstName} ${employee.lastName}`;
   const employeeId = employee.id ?? employee.employeeCode;
+  const profileEmployee = {
+    ...employee,
+    salary: currentSalary
+  };
   const salaryCurrency =
-    employee.salary?.currency ?? employee.compensationSummary?.currency ?? "USD";
+    currentSalary?.currency ?? employee.compensationSummary?.currency ?? "USD";
   const compensationSummary =
-    employee.compensationSummary ?? defaultCompensationSummary(employee);
+    employee.compensationSummary ?? defaultCompensationSummary(profileEmployee);
 
   async function loadSalaryHistory() {
     if (!employee.id || salaryHistoryLoader.isLoading || hasLoadedSalaryHistory) {
@@ -103,6 +112,40 @@ export function EmployeeProfile({ employee }: { employee: EmployeeProfileData })
 
     if (value === "salary-history") {
       void loadSalaryHistory();
+    }
+  }
+
+  async function handleSalaryUpdateSuccess() {
+    try {
+      if (employee.id) {
+        const [salaryResult, salaryHistoryResult] = await Promise.allSettled([
+          getEmployeeSalary(employee.id),
+          getEmployeeSalaryHistory(employee.id)
+        ]);
+
+        if (salaryResult.status === "fulfilled") {
+          setCurrentSalary(
+            salaryResult.value.salary
+              ? {
+                  amount: salaryResult.value.salary.amount,
+                  currency: salaryResult.value.salary.currency,
+                  effectiveFrom: salaryResult.value.salary.effectiveFrom
+                }
+              : null
+          );
+        }
+
+        if (salaryHistoryResult.status === "fulfilled") {
+          setSalaryHistory(mapSalaryHistory(salaryHistoryResult.value));
+          setHasLoadedSalaryHistory(true);
+        } else {
+          setHasLoadedSalaryHistory(false);
+        }
+      }
+    } catch {
+      // Keep the successful update flow moving even if the follow-up refresh fails.
+    } finally {
+      setIsSalaryDialogOpen(false);
     }
   }
 
@@ -199,10 +242,10 @@ export function EmployeeProfile({ employee }: { employee: EmployeeProfileData })
             p: { xs: 2, md: 3 }
           }}
         >
-          {activeTab === "overview" ? <OverviewPanel employee={employee} /> : null}
+          {activeTab === "overview" ? <OverviewPanel employee={profileEmployee} /> : null}
           {activeTab === "salary-details" ? (
             <SalaryDetailsPanel
-              employee={employee}
+              employee={profileEmployee}
               compensationSummary={compensationSummary}
               salaryCurrency={salaryCurrency}
             />
@@ -255,6 +298,9 @@ export function EmployeeProfile({ employee }: { employee: EmployeeProfileData })
             employeeId={employeeId}
             employeeLabel={`${employeeName} (${employee.employeeCode})`}
             currency={salaryCurrency}
+            onSuccess={() => {
+              void handleSalaryUpdateSuccess();
+            }}
             onCancel={() => setIsSalaryDialogOpen(false)}
           />
         </DialogContent>
