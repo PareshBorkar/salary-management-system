@@ -1,6 +1,7 @@
 import { useState, type PropsWithChildren } from "react";
 import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
 import GroupsOutlinedIcon from "@mui/icons-material/GroupsOutlined";
+import LogoutOutlinedIcon from "@mui/icons-material/LogoutOutlined";
 import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
 import {
   AppBar,
@@ -9,11 +10,16 @@ import {
   Divider,
   IconButton,
   Link,
+  ListItemIcon,
+  Menu,
+  MenuItem,
   Stack,
   Toolbar,
   Tooltip,
   Typography
 } from "@mui/material";
+
+import { clearSessionToken, notifySessionExpired } from "../api/session";
 
 const expandedSidebarWidth = 240;
 const collapsedSidebarWidth = 72;
@@ -33,7 +39,15 @@ const navItems = [
 
 export function AppLayout({ children }: PropsWithChildren) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [accountMenuAnchor, setAccountMenuAnchor] = useState<HTMLElement | null>(null);
   const sidebarWidth = isSidebarCollapsed ? collapsedSidebarWidth : expandedSidebarWidth;
+  const isAccountMenuOpen = Boolean(accountMenuAnchor);
+
+  function handleLogout() {
+    setAccountMenuAnchor(null);
+    clearSessionToken();
+    notifySessionExpired();
+  }
 
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "background.default" }}>
@@ -69,10 +83,41 @@ export function AppLayout({ children }: PropsWithChildren) {
                 HR Manager
               </Typography>
             </Box>
-            <Avatar sx={{ width: 36, height: 36 }}>A</Avatar>
+            <IconButton
+              aria-label="Open account menu"
+              aria-controls={isAccountMenuOpen ? "account-menu" : undefined}
+              aria-haspopup="menu"
+              aria-expanded={isAccountMenuOpen ? "true" : undefined}
+              onClick={(event) => setAccountMenuAnchor(event.currentTarget)}
+              sx={{ p: 0 }}
+            >
+              <Avatar sx={{ width: 36, height: 36 }}>A</Avatar>
+            </IconButton>
           </Stack>
         </Toolbar>
       </AppBar>
+
+      <Menu
+        id="account-menu"
+        anchorEl={accountMenuAnchor}
+        open={isAccountMenuOpen}
+        onClose={() => setAccountMenuAnchor(null)}
+        anchorOrigin={{
+          vertical: "bottom",
+          horizontal: "right"
+        }}
+        transformOrigin={{
+          vertical: "top",
+          horizontal: "right"
+        }}
+      >
+        <MenuItem onClick={handleLogout}>
+          <ListItemIcon>
+            <LogoutOutlinedIcon fontSize="small" />
+          </ListItemIcon>
+          Logout
+        </MenuItem>
+      </Menu>
 
       <Box
         component="aside"
