@@ -1,5 +1,6 @@
 /* @vitest-environment jsdom */
 import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { renderToString } from "react-dom/server";
 import { MemoryRouter, Navigate, Route, Routes } from "react-router-dom";
 import { StaticRouter } from "react-router-dom/server";
@@ -96,6 +97,41 @@ describe("protected app layout behavior", () => {
 
     expect(html).toContain('href="/"');
     expect(html).toContain('href="/employees"');
+  });
+
+  it("collapses and expands the sidebar navigation", async () => {
+    render(
+      <MemoryRouter initialEntries={["/"]}>
+        <AppLayout>
+          <div>Dashboard content</div>
+        </AppLayout>
+      </MemoryRouter>
+    );
+
+    const collapseButton = screen.getByRole("button", {
+      name: "Collapse navigation"
+    });
+
+    expect(screen.getByRole("link", { name: "Dashboard" })).toBeTruthy();
+    expect(screen.getByText("Compensation workspace")).toBeTruthy();
+
+    await userEvent.click(collapseButton);
+
+    expect(
+      screen
+        .getByRole("button", { name: "Expand navigation" })
+        .getAttribute("aria-pressed")
+    ).toBe("true");
+    expect(screen.queryByText("Compensation workspace")).toBeNull();
+
+    await userEvent.click(screen.getByRole("button", { name: "Expand navigation" }));
+
+    expect(
+      screen
+        .getByRole("button", { name: "Collapse navigation" })
+        .getAttribute("aria-pressed")
+    ).toBe("false");
+    expect(screen.getByText("Compensation workspace")).toBeTruthy();
   });
 
   it("redirects to login after a session-expired event clears authentication", async () => {
