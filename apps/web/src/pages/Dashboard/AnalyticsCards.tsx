@@ -73,13 +73,7 @@ export function AnalyticsCards({
   );
 }
 
-function MetricCard({
-  label,
-  value,
-  icon,
-  accent,
-  iconBackground
-}: MetricCardProps) {
+function MetricCard({ label, value, icon, accent, iconBackground }: MetricCardProps) {
   return (
     <Paper
       elevation={0}

@@ -107,15 +107,13 @@ export async function listEmployees(params: EmployeeListRequest, signal?: AbortS
   return unwrapApiResponse(response.data);
 }
 
-export async function getEmployeeSalaryHistory(
-  employeeId: string,
-  signal?: AbortSignal
-) {
-  const response = await apiClient.get<
-    ApiSuccessResponse<EmployeeSalaryHistoryResponse>
-  >(`/employees/${employeeId}/salary/history`, {
-    signal
-  });
+export async function getEmployeeSalaryHistory(employeeId: string, signal?: AbortSignal) {
+  const response = await apiClient.get<ApiSuccessResponse<EmployeeSalaryHistoryResponse>>(
+    `/employees/${employeeId}/salary/history`,
+    {
+      signal
+    }
+  );
 
   return unwrapApiResponse(response.data);
 }

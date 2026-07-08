@@ -290,7 +290,7 @@ function OverviewPanel({ employee }: { employee: EmployeeProfileData }) {
 
 function SalaryDetailsPanel({
   employee,
-  compensationSummary,
+  compensationSummary
 }: {
   employee: EmployeeProfileData;
   compensationSummary: NonNullable<EmployeeProfileData["compensationSummary"]>;
@@ -418,7 +418,7 @@ function SalaryHistoryPanel({
       ) : (
         !isLoading &&
         !errorMessage && (
-        <Typography color="text.secondary">No salary history available.</Typography>
+          <Typography color="text.secondary">No salary history available.</Typography>
         )
       )}
     </SectionPanel>
@@ -524,7 +524,7 @@ function getCurrencyForCountry(country: string | null) {
     US: "USD"
   };
 
-  return country ? countryCurrencies[country] ?? "USD" : "USD";
+  return country ? (countryCurrencies[country] ?? "USD") : "USD";
 }
 
 function formatDate(value: string) {
