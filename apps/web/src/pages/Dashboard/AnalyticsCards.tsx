@@ -3,7 +3,7 @@ import GroupsOutlinedIcon from "@mui/icons-material/GroupsOutlined";
 import PaidOutlinedIcon from "@mui/icons-material/PaidOutlined";
 import ShowChartOutlinedIcon from "@mui/icons-material/ShowChartOutlined";
 import StackedBarChartOutlinedIcon from "@mui/icons-material/StackedBarChartOutlined";
-import { Box, Grid, Paper, Stack, Typography } from "@mui/material";
+import { Box, Paper, Stack, Typography } from "@mui/material";
 
 import { formatCurrency } from "../Employees/SalaryDisplay";
 
@@ -17,6 +17,7 @@ type AnalyticsCardsProps = {
 type MetricCardProps = {
   label: string;
   value: string;
+  helper?: string;
   icon: ReactNode;
   accent: string;
   iconBackground: string;
@@ -31,8 +32,18 @@ export function AnalyticsCards({
   medianSalary
 }: AnalyticsCardsProps) {
   return (
-    <Grid container spacing={1.5}>
-      <Grid item xs={12} sm={6} lg={3}>
+    <Box
+      sx={{
+        display: "grid",
+        gap: 1.5,
+        gridTemplateColumns: {
+          xs: "1fr",
+          sm: "repeat(2, minmax(0, 1fr))",
+          lg: "repeat(4, minmax(0, 1fr))"
+        }
+      }}
+    >
+      <Box>
         <MetricCard
           label="Total Employees"
           value={numberFormatter.format(totalEmployees)}
@@ -40,8 +51,8 @@ export function AnalyticsCards({
           accent="#2563eb"
           iconBackground="#e8f0ff"
         />
-      </Grid>
-      <Grid item xs={12} sm={6} lg={3}>
+      </Box>
+      <Box>
         <MetricCard
           label="Total Payroll"
           value={formatCurrency(totalPayroll, "USD")}
@@ -49,8 +60,8 @@ export function AnalyticsCards({
           accent="#059669"
           iconBackground="#dff7eb"
         />
-      </Grid>
-      <Grid item xs={12} sm={6} lg={3}>
+      </Box>
+      <Box>
         <MetricCard
           label="Average Salary"
           value={formatCurrency(averageSalary, "USD")}
@@ -58,22 +69,28 @@ export function AnalyticsCards({
           accent="#7c3aed"
           iconBackground="#efe7ff"
         />
-      </Grid>
-      <Grid item xs={12} sm={6} lg={3}>
+      </Box>
+      <Box>
         <MetricCard
           label="Median Salary"
           value={formatCurrency(medianSalary, "USD")}
-          helper="+1.9% vs last month"
           icon={<StackedBarChartOutlinedIcon fontSize="small" />}
           accent="#dc2626"
           iconBackground="#fee2e2"
         />
-      </Grid>
-    </Grid>
+      </Box>
+    </Box>
   );
 }
 
-function MetricCard({ label, value, icon, accent, iconBackground }: MetricCardProps) {
+function MetricCard({
+  label,
+  value,
+  helper,
+  icon,
+  accent,
+  iconBackground
+}: MetricCardProps) {
   return (
     <Paper
       elevation={0}
@@ -108,6 +125,11 @@ function MetricCard({ label, value, icon, accent, iconBackground }: MetricCardPr
           <Typography sx={{ fontSize: "1.65rem", fontWeight: 800, lineHeight: 1.15 }}>
             {value}
           </Typography>
+          {helper ? (
+            <Typography variant="caption" color="text.secondary">
+              {helper}
+            </Typography>
+          ) : null}
         </Box>
       </Stack>
     </Paper>

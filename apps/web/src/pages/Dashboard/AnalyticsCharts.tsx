@@ -1,13 +1,5 @@
 import type { ReactNode } from "react";
-import {
-  Box,
-  Button,
-  Grid,
-  LinearProgress,
-  Paper,
-  Stack,
-  Typography
-} from "@mui/material";
+import { Box, Grid, LinearProgress, Paper, Stack, Typography } from "@mui/material";
 
 import { formatCurrency } from "../Employees/SalaryDisplay";
 import type { CompensationAnalytics } from "../../api/dashboard.api";
@@ -18,6 +10,7 @@ type AnalyticsChartsProps = {
 };
 
 const chartPalette = ["#2563eb", "#10b981", "#f59e0b", "#8b5cf6", "#06b6d4", "#64748b"];
+const panelMinHeight = 344;
 
 export function AnalyticsCharts({ analytics, totalEmployees }: AnalyticsChartsProps) {
   const maxDepartmentAverage = Math.max(
@@ -35,50 +28,65 @@ export function AnalyticsCharts({ analytics, totalEmployees }: AnalyticsChartsPr
   );
 
   return (
-    <Grid container spacing={2}>
-      <Grid item xs={12} md={6}>
+    <Box
+      sx={{
+        display: "grid",
+        gap: 2.5,
+        gridTemplateColumns: {
+          xs: "1fr",
+          md: "repeat(2, minmax(0, 1fr))"
+        }
+      }}
+    >
+      <Box>
         <PayrollByCountryCard
           title="Payroll by Country"
+          description="Payroll concentration and headcount across active employee locations."
           maxPayroll={maxCountryPayroll}
           totalEmployees={totalEmployees}
           items={countryPayrollItems}
         />
-      </Grid>
-      <Grid item xs={12} md={6}>
+      </Box>
+      <Box>
         <AverageSalaryByDepartmentCard
           title="Average Salary by Department"
+          description="Department-level average salary compared against the highest department average."
           maxAverage={maxDepartmentAverage}
           items={analytics.averageByDepartment.map((item) => ({
             label: item.department,
             averageSalary: item.averageSalary
           }))}
         />
-      </Grid>
-      <Grid item xs={12} md={6}>
+      </Box>
+      <Box>
         <SalaryBandsCard
           title="Salary Bands"
+          description="Employee distribution across salary ranges for compensation planning."
           maxCount={maxSalaryBandCount}
           items={analytics.salaryBands}
         />
-      </Grid>
-      <Grid item xs={12} md={6}>
+      </Box>
+      <Box>
         <RoleLevelDistributionCard
           title="Role and Level Distribution"
+          description="Headcount mix by role and seniority level."
           roles={analytics.distributionByRole ?? []}
           levels={analytics.distributionByLevel ?? []}
         />
-      </Grid>
-    </Grid>
+      </Box>
+    </Box>
   );
 }
 
 function PayrollByCountryCard({
   title,
+  description,
   maxPayroll,
   totalEmployees,
   items
 }: {
   title: string;
+  description: string;
   items: Array<{
     label: string;
     count: number;
@@ -90,11 +98,15 @@ function PayrollByCountryCard({
   const gradient = buildDonutGradient(items.map((item) => item.totalPayroll));
 
   return (
-    <DashboardPanel title={title} action="This Month">
+    <DashboardPanel title={title} description={description} meta="Current payroll">
+      {items.length === 0 ? (
+        <EmptyChartState message="No country payroll data yet." />
+      ) : null}
       <Stack
         direction={{ xs: "column", sm: "row" }}
-        spacing={3}
+        spacing={3.5}
         alignItems={{ xs: "stretch", sm: "center" }}
+        sx={{ display: items.length ? "flex" : "none" }}
       >
         <Box
           aria-label="Countries distribution"
@@ -103,16 +115,18 @@ function PayrollByCountryCard({
             background: gradient,
             borderRadius: "50%",
             flex: "0 0 auto",
-            maxWidth: 180,
+            maxWidth: 188,
             mx: { xs: "auto", sm: 0 },
             position: "relative",
-            width: "42%"
+            width: { xs: 184, sm: "38%" },
+            boxShadow: "inset 0 0 0 1px rgba(15, 23, 42, 0.06)"
           }}
         >
           <Box
             sx={{
               bgcolor: "background.paper",
               borderRadius: "50%",
+              boxShadow: "0 0 0 1px rgba(15, 23, 42, 0.08)",
               inset: "26%",
               position: "absolute"
             }}
@@ -138,10 +152,12 @@ function PayrollByCountryCard({
 
 function AverageSalaryByDepartmentCard({
   title,
+  description,
   maxAverage,
   items
 }: {
   title: string;
+  description: string;
   maxAverage: number;
   items: Array<{
     label: string;
@@ -149,8 +165,11 @@ function AverageSalaryByDepartmentCard({
   }>;
 }) {
   return (
-    <DashboardPanel title={title} action="">
-      <Stack spacing={1.5}>
+    <DashboardPanel title={title} description={description} meta="USD average">
+      {items.length === 0 ? (
+        <EmptyChartState message="No department salary averages yet." />
+      ) : null}
+      <Stack spacing={1.75} sx={{ display: items.length ? "flex" : "none" }}>
         {items.map((item, index) => (
           <Box key={item.label}>
             <Stack direction="row" justifyContent="space-between" spacing={2}>
@@ -167,7 +186,7 @@ function AverageSalaryByDepartmentCard({
                   {item.label}
                 </Typography>
               </Stack>
-              <Typography color="text.secondary" noWrap>
+              <Typography color="text.secondary" fontWeight={700} noWrap>
                 {formatCurrency(item.averageSalary, "USD")}
               </Typography>
             </Stack>
@@ -176,12 +195,12 @@ function AverageSalaryByDepartmentCard({
               value={(item.averageSalary / maxAverage) * 100}
               sx={{
                 bgcolor: "#eef2f7",
-                borderRadius: 1,
-                height: 7,
-                mt: 0.75,
+                borderRadius: 999,
+                height: 8,
+                mt: 0.9,
                 "& .MuiLinearProgress-bar": {
                   bgcolor: chartPalette[index % chartPalette.length],
-                  borderRadius: 1
+                  borderRadius: 999
                 }
               }}
             />
@@ -194,10 +213,12 @@ function AverageSalaryByDepartmentCard({
 
 function SalaryBandsCard({
   title,
+  description,
   maxCount,
   items
 }: {
   title: string;
+  description: string;
   maxCount: number;
   items: Array<{
     label: string;
@@ -205,32 +226,40 @@ function SalaryBandsCard({
   }>;
 }) {
   return (
-    <DashboardPanel title={title} action="All Countries">
+    <DashboardPanel title={title} description={description} meta="Employee count">
+      {items.length === 0 ? <EmptyChartState message="No salary band data yet." /> : null}
       <Box
         aria-label="Salary bands chart"
         sx={{
           alignItems: "end",
-          display: "grid",
-          gap: 1.25,
-          gridTemplateColumns: `repeat(${Math.max(items.length, 1)}, minmax(44px, 1fr))`,
-          minHeight: 190
+          display: items.length ? "grid" : "none",
+          gap: { xs: 1, sm: 1.5 },
+          gridTemplateColumns: `repeat(${Math.max(items.length, 1)}, minmax(56px, 1fr))`,
+          minHeight: 224,
+          pt: 1
         }}
       >
         {items.map((item, index) => (
-          <Stack key={item.label} spacing={1} alignItems="center" justifyContent="end">
+          <Stack
+            key={item.label}
+            spacing={1}
+            alignItems="center"
+            justifyContent="end"
+            sx={{ minWidth: 0 }}
+          >
+            <Typography fontWeight={800}>{item.count}</Typography>
             <Box
               sx={{
                 bgcolor: chartPalette[index % chartPalette.length],
-                borderRadius: "6px 6px 2px 2px",
-                height: `${Math.max((item.count / maxCount) * 145, 12)}px`,
-                width: "100%"
+                borderRadius: "8px 8px 3px 3px",
+                height: `${Math.max((item.count / maxCount) * 156, 14)}px`,
+                minHeight: 14,
+                width: "100%",
+                boxShadow: "inset 0 -1px 0 rgba(15, 23, 42, 0.12)"
               }}
             />
             <Typography variant="caption" fontWeight={700} textAlign="center">
               {item.label}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              {item.count}
             </Typography>
           </Stack>
         ))}
@@ -241,10 +270,12 @@ function SalaryBandsCard({
 
 function RoleLevelDistributionCard({
   title,
+  description,
   roles,
   levels
 }: {
   title: string;
+  description: string;
   roles: Array<{
     role: string;
     count: number;
@@ -254,9 +285,14 @@ function RoleLevelDistributionCard({
     count: number;
   }>;
 }) {
+  const hasItems = roles.length > 0 || levels.length > 0;
+
   return (
-    <DashboardPanel title={title} action="Headcount">
-      <Grid container spacing={2}>
+    <DashboardPanel title={title} description={description} meta="Headcount">
+      {!hasItems ? (
+        <EmptyChartState message="No role or level distribution data yet." />
+      ) : null}
+      <Grid container spacing={2.25} sx={{ display: hasItems ? "flex" : "none" }}>
         <Grid item xs={12} sm={6}>
           <DistributionList
             title="By Role"
@@ -292,24 +328,33 @@ function DistributionList({
 
   return (
     <Stack spacing={1.25} aria-label={ariaLabel}>
-      <Typography fontWeight={800}>{title}</Typography>
+      <Typography fontWeight={800} color="text.primary">
+        {title}
+      </Typography>
+      {items.length === 0 ? (
+        <EmptyChartState message="No data available." compact />
+      ) : null}
       {items.map((item, index) => (
         <Box key={item.label}>
           <Stack direction="row" justifyContent="space-between" spacing={1.5}>
-            <Typography fontWeight={700}>{item.label}</Typography>
-            <Typography color="text.secondary">{item.count}</Typography>
+            <Typography fontWeight={700} noWrap>
+              {item.label}
+            </Typography>
+            <Typography color="text.secondary" fontWeight={700}>
+              {item.count}
+            </Typography>
           </Stack>
           <LinearProgress
             variant="determinate"
             value={total ? (item.count / total) * 100 : 0}
             sx={{
               bgcolor: "#eef2f7",
-              borderRadius: 1,
-              height: 7,
+              borderRadius: 999,
+              height: 8,
               mt: 0.75,
               "& .MuiLinearProgress-bar": {
                 bgcolor: chartPalette[index % chartPalette.length],
-                borderRadius: 1
+                borderRadius: 999
               }
             }}
           />
@@ -321,22 +366,58 @@ function DistributionList({
 
 function DashboardPanel({
   title,
-  action,
+  description,
+  meta,
   children
 }: {
   title: string;
-  action: string;
+  description: string;
+  meta: string;
   children: ReactNode;
 }) {
   return (
     <Paper
       elevation={0}
-      sx={{ border: "1px solid", borderColor: "divider", borderRadius: 2, p: 2 }}
+      sx={{
+        border: "1px solid",
+        borderColor: "rgba(148, 163, 184, 0.28)",
+        borderRadius: 2,
+        boxShadow: "0 14px 38px rgba(15, 23, 42, 0.05)",
+        height: "100%",
+        minHeight: panelMinHeight,
+        p: { xs: 2, sm: 2.5 }
+      }}
     >
-      <Stack spacing={2}>
-        <Stack direction="row" alignItems="center" justifyContent="space-between">
-          <Typography variant="h2" sx={{ fontSize: "1rem" }}>
-            {title}
+      <Stack spacing={2.5} sx={{ height: "100%" }}>
+        <Stack
+          direction={{ xs: "column", sm: "row" }}
+          alignItems={{ xs: "flex-start", sm: "flex-start" }}
+          justifyContent="space-between"
+          spacing={1}
+        >
+          <Stack spacing={0.5} sx={{ minWidth: 0 }}>
+            <Typography variant="h2" sx={{ fontSize: "1rem" }}>
+              {title}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {description}
+            </Typography>
+          </Stack>
+          <Typography
+            variant="caption"
+            sx={{
+              bgcolor: "#f8fafc",
+              border: "1px solid",
+              borderColor: "divider",
+              borderRadius: 999,
+              color: "text.secondary",
+              flex: "0 0 auto",
+              fontWeight: 700,
+              px: 1.25,
+              py: 0.4
+            }}
+          >
+            {meta}
           </Typography>
         </Stack>
         {children}
@@ -362,9 +443,9 @@ function CountryRow({
 }) {
   return (
     <Box>
-      <Stack direction="row" spacing={1.5} alignItems="center">
-        <Box sx={{ bgcolor: color, borderRadius: "50%", height: 8, width: 8 }} />
-        <Typography fontWeight={700} sx={{ flex: 1 }}>
+      <Stack direction="row" spacing={1.5} alignItems="center" sx={{ minWidth: 0 }}>
+        <Box sx={{ bgcolor: color, borderRadius: "50%", height: 9, width: 9 }} />
+        <Typography fontWeight={700} noWrap sx={{ flex: 1 }}>
           {label}
         </Typography>
         <Typography fontWeight={700}>{percentage.toFixed(0)}%</Typography>
@@ -380,12 +461,12 @@ function CountryRow({
         value={progress}
         sx={{
           bgcolor: "#eef2f7",
-          borderRadius: 1,
-          height: 6,
+          borderRadius: 999,
+          height: 8,
           mt: 0.75,
           "& .MuiLinearProgress-bar": {
             bgcolor: color,
-            borderRadius: 1
+            borderRadius: 999
           }
         }}
       />
@@ -440,4 +521,31 @@ function buildDonutGradient(values: number[]) {
   });
 
   return `conic-gradient(${stops.join(", ")})`;
+}
+
+function EmptyChartState({
+  message,
+  compact = false
+}: {
+  message: string;
+  compact?: boolean;
+}) {
+  return (
+    <Box
+      sx={{
+        alignItems: "center",
+        bgcolor: "#f8fafc",
+        border: "1px dashed",
+        borderColor: "divider",
+        borderRadius: 2,
+        display: "flex",
+        justifyContent: "center",
+        minHeight: compact ? 88 : 196,
+        px: 2,
+        textAlign: "center"
+      }}
+    >
+      <Typography color="text.secondary">{message}</Typography>
+    </Box>
+  );
 }

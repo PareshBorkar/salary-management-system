@@ -37,6 +37,16 @@ export function DashboardAnalytics({ analytics }: { analytics: CompensationAnaly
         medianSalary={analytics.medianSalary}
       />
 
+      <Stack spacing={1}>
+        <Typography variant="h2" sx={{ fontSize: "1.1rem" }}>
+          Compensation Insights
+        </Typography>
+        <Typography color="text.secondary">
+          Review payroll concentration, department averages, salary bands, and workforce
+          distribution.
+        </Typography>
+      </Stack>
+
       <AnalyticsCharts analytics={analytics} totalEmployees={totalEmployees} />
     </Stack>
   );

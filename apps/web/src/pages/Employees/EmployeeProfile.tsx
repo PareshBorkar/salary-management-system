@@ -312,11 +312,14 @@ export function EmployeeProfile({ employee }: { employee: EmployeeProfileData })
 function OverviewPanel({ employee }: { employee: EmployeeProfileData }) {
   return (
     <SectionPanel title="Employee Overview">
-      <Stack spacing={1.5} sx={{
-            maxHeight: { xs: 280, sm: 360 },
-            overflowY: "auto",
-            pr: 0.5
-          }}>
+      <Stack
+        spacing={1.5}
+        sx={{
+          maxHeight: { xs: 280, sm: 360 },
+          overflowY: "auto",
+          pr: 0.5
+        }}
+      >
         <DetailRow label="Employee ID" value={employee.employeeCode} />
         <DetailRow label="Email" value={employee.email ?? "-"} />
         <DetailRow label="Phone" value={employee.phone ?? "-"} />
