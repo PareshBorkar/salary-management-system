@@ -312,7 +312,11 @@ export function EmployeeProfile({ employee }: { employee: EmployeeProfileData })
 function OverviewPanel({ employee }: { employee: EmployeeProfileData }) {
   return (
     <SectionPanel title="Employee Overview">
-      <Stack spacing={1.5}>
+      <Stack spacing={1.5} sx={{
+            maxHeight: { xs: 280, sm: 360 },
+            overflowY: "auto",
+            pr: 0.5
+          }}>
         <DetailRow label="Employee ID" value={employee.employeeCode} />
         <DetailRow label="Email" value={employee.email ?? "-"} />
         <DetailRow label="Phone" value={employee.phone ?? "-"} />
@@ -426,12 +430,20 @@ function SalaryHistoryPanel({
       ) : null}
 
       {!isLoading && !errorMessage && salaryHistory.length > 0 ? (
-        <Stack spacing={1.5}>
+        <Stack
+          spacing={1.5}
+          sx={{
+            maxHeight: { xs: 280, sm: 360 },
+            overflowY: "auto",
+            pr: 0.5
+          }}
+        >
           {salaryHistory.map((entry) => (
             <Stack
               key={entry.id}
               spacing={0.75}
               sx={{
+                flexShrink: 0,
                 p: 1.5,
                 border: "1px solid",
                 borderColor: "divider",
