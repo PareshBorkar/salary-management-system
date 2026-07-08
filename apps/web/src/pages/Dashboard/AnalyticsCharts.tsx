@@ -149,7 +149,7 @@ function AverageSalaryByDepartmentCard({
   }>;
 }) {
   return (
-    <DashboardPanel title={title} action="This Month">
+    <DashboardPanel title={title} action="">
       <Stack spacing={1.5}>
         {items.map((item, index) => (
           <Box key={item.label}>
@@ -338,9 +338,6 @@ function DashboardPanel({
           <Typography variant="h2" sx={{ fontSize: "1rem" }}>
             {title}
           </Typography>
-          <Button variant="outlined" color="inherit" size="small">
-            {action}
-          </Button>
         </Stack>
         {children}
       </Stack>

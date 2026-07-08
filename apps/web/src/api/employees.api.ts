@@ -3,6 +3,7 @@ import { type ApiSuccessResponse, unwrapApiResponse } from "./responses";
 
 export type Employee = {
   id: string;
+  organizationId?: string;
   employeeCode: string;
   firstName: string;
   lastName: string;
@@ -12,6 +13,8 @@ export type Employee = {
   department: string | null;
   role: string | null;
   level: string | null;
+  status?: "ACTIVE" | "INACTIVE" | "TERMINATED";
+  hiredAt?: string | null;
   salary: {
     amount: number;
     currency: string;
@@ -43,6 +46,17 @@ export type EmployeeListResponse = {
 };
 
 export type SalaryChangeReason = "MERIT" | "PROMOTION" | "ADJUSTMENT" | "CORRECTION";
+
+export type CreateEmployeeRequest = {
+  firstName: string;
+  lastName: string;
+  email?: string;
+  title?: string;
+  country?: string;
+  department?: string;
+  role?: string;
+  level?: string;
+};
 
 export type UpdateEmployeeSalaryRequest = {
   amount: number;
@@ -102,6 +116,15 @@ export async function listEmployees(params: EmployeeListRequest, signal?: AbortS
       signal,
       params
     }
+  );
+
+  return unwrapApiResponse(response.data);
+}
+
+export async function createEmployee(payload: CreateEmployeeRequest) {
+  const response = await apiClient.post<ApiSuccessResponse<Employee>>(
+    "/employees",
+    payload
   );
 
   return unwrapApiResponse(response.data);

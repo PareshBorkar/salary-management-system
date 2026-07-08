@@ -23,6 +23,7 @@ export function useEmployeesTable() {
   const [level, setLevel] = useState("");
   const [sortBy, setSortBy] = useState<EmployeeSortBy>("employeeCode");
   const [sortDirection, setSortDirection] = useState<EmployeeSortDirection>("asc");
+  const [refreshKey, setRefreshKey] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -88,7 +89,18 @@ export function useEmployeesTable() {
       isActive = false;
       controller.abort();
     };
-  }, [country, department, level, page, pageSize, role, search, sortBy, sortDirection]);
+  }, [
+    country,
+    department,
+    level,
+    page,
+    pageSize,
+    refreshKey,
+    role,
+    search,
+    sortBy,
+    sortDirection
+  ]);
 
   const activeFilterCount = useMemo(
     () => [country, department, role, level].filter(Boolean).length,
@@ -113,6 +125,10 @@ export function useEmployeesTable() {
     setPageSize(nextPageSize);
   }
 
+  function refreshEmployees() {
+    setRefreshKey((currentKey) => currentKey + 1);
+  }
+
   return {
     employees,
     total,
@@ -135,6 +151,7 @@ export function useEmployeesTable() {
     setRole: (value: string) => handleFilterChange(setRole, value),
     setLevel: (value: string) => handleFilterChange(setLevel, value),
     setPageSize: handlePageSizeChange,
-    handleSort
+    handleSort,
+    refreshEmployees
   };
 }
