@@ -4,8 +4,12 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
+  getEmployeeSalary,
   getEmployeeSalaryHistory,
-  type EmployeeSalaryHistoryResponse
+  updateEmployeeSalary,
+  type EmployeeSalaryResponse,
+  type EmployeeSalaryHistoryResponse,
+  type UpdateEmployeeSalaryResponse
 } from "../../../src/api/employees.api";
 import { clearEmployeeSalaryHistoryCache } from "../../../src/hooks/useEmployeeSalaryHistory";
 import { clearLocalCurrencyCache } from "../../../src/hooks/useLocalCurrency";
@@ -16,12 +20,15 @@ import {
 
 vi.mock("../../../src/api/employees.api", async () => {
   return {
+    getEmployeeSalary: vi.fn(),
     getEmployeeSalaryHistory: vi.fn(),
     updateEmployeeSalary: vi.fn()
   };
 });
 
+const getEmployeeSalaryMock = vi.mocked(getEmployeeSalary);
 const getEmployeeSalaryHistoryMock = vi.mocked(getEmployeeSalaryHistory);
+const updateEmployeeSalaryMock = vi.mocked(updateEmployeeSalary);
 
 const employee: EmployeeProfileData = {
   id: "employee-1",
@@ -88,12 +95,83 @@ function salaryHistoryResponse(): EmployeeSalaryHistoryResponse {
   };
 }
 
+function updatedSalaryHistoryResponse(): EmployeeSalaryHistoryResponse {
+  return {
+    employee: {
+      id: "employee-1",
+      employeeCode: "ACME-00042",
+      firstName: "Aditi",
+      lastName: "Sharma"
+    },
+    salaryHistory: [
+      {
+        id: "history-2",
+        previousAmount: 128000,
+        newAmount: 132000,
+        currency: "USD",
+        effectiveDate: "2026-04-01T00:00:00.000Z",
+        reason: "MERIT",
+        notes: null,
+        updatedById: "hr-manager-1",
+        changedBy: {
+          id: "hr-manager-1",
+          email: "hr.manager@acme.example"
+        },
+        createdAt: "2026-04-01T00:00:00.000Z"
+      },
+      ...salaryHistoryResponse().salaryHistory
+    ]
+  };
+}
+
+const salaryUpdateResponse: UpdateEmployeeSalaryResponse = {
+  salary: {
+    amount: 132000,
+    currency: "USD",
+    effectiveFrom: "2026-04-01T00:00:00.000Z"
+  },
+  salaryHistory: {
+    id: "history-2",
+    previousAmount: 128000,
+    newAmount: 132000,
+    currency: "USD",
+    effectiveDate: "2026-04-01T00:00:00.000Z",
+    reason: "MERIT",
+    updatedById: "hr-manager-1",
+    changedBy: {
+      id: "hr-manager-1",
+      email: "hr.manager@acme.example"
+    }
+  }
+};
+
+const salaryDetailsResponse: EmployeeSalaryResponse = {
+  employee: {
+    id: "employee-1",
+    employeeCode: "ACME-00042",
+    firstName: "Aditi",
+    lastName: "Sharma"
+  },
+  salary: {
+    id: "salary-1",
+    amount: 132000,
+    currency: "USD",
+    effectiveFrom: "2026-04-01T00:00:00.000Z",
+    createdAt: "2026-04-01T00:00:00.000Z",
+    updatedAt: "2026-04-01T00:00:00.000Z"
+  }
+};
+
 describe("EmployeeProfile", () => {
   beforeEach(() => {
     clearEmployeeSalaryHistoryCache();
     clearLocalCurrencyCache();
+    getEmployeeSalaryMock.mockReset();
     getEmployeeSalaryHistoryMock.mockReset();
+    updateEmployeeSalaryMock.mockReset();
+    getEmployeeSalaryMock.mockResolvedValue(salaryDetailsResponse);
     getEmployeeSalaryHistoryMock.mockResolvedValue(salaryHistoryResponse());
+    updateEmployeeSalaryMock.mockResolvedValue(salaryUpdateResponse);
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({
@@ -192,7 +270,7 @@ describe("EmployeeProfile", () => {
     expect(dialogQueries.getByLabelText("Employee").textContent).toContain(
       "Aditi Sharma (ACME-00042)"
     );
-    expect(dialogQueries.getByRole("textbox", { name: "Effective From" })).toBeTruthy();
+    expect(dialogQueries.getByLabelText("Effective From")).toBeTruthy();
     expect(
       dialogQueries.getByRole("spinbutton", { name: /Annual Base Salary/ })
     ).toBeTruthy();
@@ -202,5 +280,44 @@ describe("EmployeeProfile", () => {
     expect(
       await dialogQueries.findByRole("button", { name: "Save & Update" })
     ).toBeTruthy();
+  });
+
+  it("closes the update salary popup after saving", async () => {
+    getEmployeeSalaryHistoryMock.mockResolvedValueOnce(updatedSalaryHistoryResponse());
+
+    render(<EmployeeProfile employee={employee} />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Update Salary" }));
+
+    const dialog = screen.getByRole("dialog");
+    const dialogQueries = within(dialog);
+
+    await userEvent.type(
+      dialogQueries.getByRole("spinbutton", { name: /Annual Base Salary/ }),
+      "132000"
+    );
+    await userEvent.click(dialogQueries.getByRole("combobox", { name: /Reason/ }));
+    await userEvent.click(await screen.findByRole("option", { name: "Merit" }));
+    await userEvent.type(dialogQueries.getByLabelText("Effective From"), "2026-04-01");
+    await userEvent.click(dialogQueries.getByRole("button", { name: "Save & Update" }));
+
+    await waitFor(() =>
+      expect(updateEmployeeSalaryMock).toHaveBeenCalledWith("employee-1", {
+        amount: 132000,
+        reason: "MERIT",
+        effectiveDate: "2026-04-01"
+      })
+    );
+    await waitFor(() => expect(getEmployeeSalaryMock).toHaveBeenCalledWith("employee-1"));
+    await waitFor(() =>
+      expect(getEmployeeSalaryHistoryMock).toHaveBeenCalledWith("employee-1")
+    );
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(screen.getAllByText("$132,000").length).toBeGreaterThan(0);
+
+    await userEvent.click(screen.getByRole("tab", { name: "Salary History" }));
+
+    expect(screen.getByText("$128,000 to $132,000 - Merit")).toBeTruthy();
+    expect(getEmployeeSalaryHistoryMock).toHaveBeenCalledTimes(1);
   });
 });
