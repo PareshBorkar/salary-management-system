@@ -6,9 +6,9 @@ import { DashboardPage } from "../../../src/pages/Dashboard/DashboardPage";
 import {
   getCompensationAnalytics,
   type CompensationAnalytics
-} from "../../../src/pages/Dashboard/dashboard.api";
+} from "../../../src/api/dashboard.api";
 
-vi.mock("../../../src/pages/Dashboard/dashboard.api", async () => {
+vi.mock("../../../src/api/dashboard.api", async () => {
   return {
     getCompensationAnalytics: vi.fn()
   };

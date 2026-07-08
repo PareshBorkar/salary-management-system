@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 
 import { EmployeeDetailPage } from "../../../src/pages/Employees/EmployeeDetailPage";
-import type { Employee } from "../../../src/pages/Employees/employees.api";
+import type { Employee } from "../../../src/api/employees.api";
 
 const employee: Employee = {
   id: "employee-1",
@@ -47,7 +47,7 @@ describe("EmployeeDetailPage", () => {
 
     expect(screen.getByText("Aditi Sharma")).toBeTruthy();
     expect(screen.getByText("ACME-00001")).toBeTruthy();
-    expect(screen.getByText("Current Compensation")).toBeTruthy();
+    expect(screen.getByText("Employee Overview")).toBeTruthy();
     expect(screen.getAllByText("$128,000").length).toBeGreaterThan(0);
   });
 });

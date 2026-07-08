@@ -17,9 +17,9 @@ import {
   listEmployees,
   type Employee,
   type EmployeeListResponse
-} from "../../../src/pages/Employees/employees.api";
+} from "../../../src/api/employees.api";
 
-vi.mock("../../../src/pages/Employees/employees.api", async () => {
+vi.mock("../../../src/api/employees.api", async () => {
   return {
     listEmployees: vi.fn()
   };

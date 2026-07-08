@@ -8,9 +8,9 @@ import { SalaryUpdateForm } from "../../../src/pages/Employees/SalaryUpdateForm"
 import {
   updateEmployeeSalary,
   type UpdateEmployeeSalaryResponse
-} from "../../../src/pages/Employees/employees.api";
+} from "../../../src/api/employees.api";
 
-vi.mock("../../../src/pages/Employees/employees.api", async () => {
+vi.mock("../../../src/api/employees.api", async () => {
   return {
     updateEmployeeSalary: vi.fn()
   };
