@@ -19,8 +19,11 @@ type LoginResponse = {
   user: {
     id: string;
     email: string;
+    firstName: string;
+    lastName: string;
     role: string;
     organizationId: string;
+    organizationName: string;
   };
 };
 
@@ -55,7 +58,10 @@ describe("authentication behavior", () => {
     expect(body.data.token.split(".")).toHaveLength(3);
     expect(body.data.user).toMatchObject({
       email: validCredentials.email,
-      role: "HR_MANAGER"
+      firstName: "ACME",
+      lastName: "HR Manager",
+      role: "HR_MANAGER",
+      organizationName: "ACME"
     });
     expect(body.data.user.id).toEqual(expect.any(String));
     expect(body.data.user.organizationId).toEqual(expect.any(String));
