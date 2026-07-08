@@ -54,6 +54,47 @@ type SalaryUpdateResponse = {
   };
 };
 
+type SalaryHistoryResponse = {
+  employee: {
+    id: string;
+    employeeCode: string;
+    firstName: string;
+    lastName: string;
+  };
+  salaryHistory: Array<{
+    id: string;
+    previousAmount: number;
+    newAmount: number;
+    currency: string;
+    effectiveDate: string;
+    reason: string;
+    notes: string | null;
+    updatedById: string | null;
+    changedBy: {
+      id: string;
+      email: string;
+    } | null;
+    createdAt: string;
+  }>;
+};
+
+type SalaryDetailsResponse = {
+  employee: {
+    id: string;
+    employeeCode: string;
+    firstName: string;
+    lastName: string;
+  };
+  salary: {
+    id: string;
+    amount: number;
+    currency: string;
+    effectiveFrom: string;
+    createdAt: string;
+    updatedAt: string;
+  } | null;
+};
+
 describe("salary update behavior", () => {
   let app: FastifyInstance | undefined;
 
@@ -272,6 +313,180 @@ describe("salary update behavior", () => {
       id: userId,
       email: "salary.test.hr@acme.example"
     });
+  });
+
+  it("returns current salary details for an employee", async () => {
+    app = await createApp({ logger: false });
+
+    const response = await app.inject({
+      method: "GET",
+      url: `/v1/employees/${employeeId}/salary`,
+      headers: authorizationHeader()
+    });
+
+    expect(response.statusCode).toBe(200);
+
+    const body = response.json<ApiSuccessResponse<SalaryDetailsResponse>>();
+
+    expect(body).toMatchObject({
+      success: true,
+      message: "Request completed successfully"
+    });
+    expect(body.data.employee).toMatchObject({
+      id: employeeId,
+      employeeCode: "SAL-00001",
+      firstName: "Salary",
+      lastName: "Employee"
+    });
+    expect(body.data.salary).toMatchObject({
+      amount: 90000,
+      currency: "USD",
+      effectiveFrom: "2026-01-01T00:00:00.000Z"
+    });
+    expect(body.data.salary?.id).toEqual(expect.any(String));
+    expect(body.data.salary?.createdAt).toEqual(expect.any(String));
+    expect(body.data.salary?.updatedAt).toEqual(expect.any(String));
+  });
+
+  it("returns null salary details when an employee has no current salary", async () => {
+    app = await createApp({ logger: false });
+
+    await prisma.salary.deleteMany({
+      where: {
+        organizationId,
+        employeeId
+      }
+    });
+
+    const response = await app.inject({
+      method: "GET",
+      url: `/v1/employees/${employeeId}/salary`,
+      headers: authorizationHeader()
+    });
+
+    expect(response.statusCode).toBe(200);
+
+    const body = response.json<ApiSuccessResponse<SalaryDetailsResponse>>();
+
+    expect(body.data.employee.id).toBe(employeeId);
+    expect(body.data.salary).toBeNull();
+  });
+
+  it("does not return salary details for employees outside the authenticated organization", async () => {
+    app = await createApp({ logger: false });
+
+    const response = await app.inject({
+      method: "GET",
+      url: `/v1/employees/${employeeId}/salary`,
+      headers: authorizationHeader(otherOrganizationToken)
+    });
+
+    expect(response.statusCode).toBe(404);
+  });
+
+  it("returns salary history details for an employee", async () => {
+    app = await createApp({ logger: false });
+
+    await app.inject({
+      method: "PATCH",
+      url: `/v1/employees/${employeeId}/salary`,
+      headers: authorizationHeader(),
+      payload: {
+        amount: 125000,
+        reason: "MERIT",
+        effectiveDate: "2026-03-01"
+      }
+    });
+    await app.inject({
+      method: "PATCH",
+      url: `/v1/employees/${employeeId}/salary`,
+      headers: authorizationHeader(),
+      payload: {
+        amount: 135000,
+        reason: "PROMOTION",
+        effectiveDate: "2026-05-01"
+      }
+    });
+
+    const response = await app.inject({
+      method: "GET",
+      url: `/v1/employees/${employeeId}/salary/history`,
+      headers: authorizationHeader()
+    });
+
+    expect(response.statusCode).toBe(200);
+
+    const body = response.json<ApiSuccessResponse<SalaryHistoryResponse>>();
+
+    expect(body).toMatchObject({
+      success: true,
+      message: "Request completed successfully"
+    });
+    expect(body.data.employee).toMatchObject({
+      id: employeeId,
+      employeeCode: "SAL-00001",
+      firstName: "Salary",
+      lastName: "Employee"
+    });
+    expect(body.data.salaryHistory).toHaveLength(2);
+    expect(body.data.salaryHistory[0]).toMatchObject({
+      previousAmount: 125000,
+      newAmount: 135000,
+      currency: "USD",
+      effectiveDate: "2026-05-01T00:00:00.000Z",
+      reason: "PROMOTION",
+      updatedById: userId,
+      changedBy: {
+        id: userId,
+        email: "salary.test.hr@acme.example"
+      }
+    });
+    expect(body.data.salaryHistory[1]).toMatchObject({
+      previousAmount: 90000,
+      newAmount: 125000,
+      effectiveDate: "2026-03-01T00:00:00.000Z",
+      reason: "MERIT"
+    });
+  });
+
+  it("returns an empty salary history list for an employee without changes", async () => {
+    app = await createApp({ logger: false });
+
+    const response = await app.inject({
+      method: "GET",
+      url: `/v1/employees/${employeeId}/salary/history`,
+      headers: authorizationHeader()
+    });
+
+    expect(response.statusCode).toBe(200);
+
+    const body = response.json<ApiSuccessResponse<SalaryHistoryResponse>>();
+
+    expect(body.data.employee.id).toBe(employeeId);
+    expect(body.data.salaryHistory).toEqual([]);
+  });
+
+  it("does not return salary history for employees outside the authenticated organization", async () => {
+    app = await createApp({ logger: false });
+
+    await app.inject({
+      method: "PATCH",
+      url: `/v1/employees/${employeeId}/salary`,
+      headers: authorizationHeader(),
+      payload: {
+        amount: 125000,
+        reason: "MERIT",
+        effectiveDate: "2026-03-01"
+      }
+    });
+
+    const response = await app.inject({
+      method: "GET",
+      url: `/v1/employees/${employeeId}/salary/history`,
+      headers: authorizationHeader(otherOrganizationToken)
+    });
+
+    expect(response.statusCode).toBe(404);
   });
 
   it("rejects non-positive salary amounts", async () => {
