@@ -1,5 +1,5 @@
 /* @vitest-environment jsdom */
-import { render, screen, waitFor } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderToString } from "react-dom/server";
 import { MemoryRouter, Navigate, Route, Routes } from "react-router-dom";
@@ -30,6 +30,7 @@ describe("protected app layout behavior", () => {
   });
 
   afterEach(() => {
+    cleanup();
     clearSessionToken();
     vi.unstubAllGlobals();
   });
@@ -132,6 +133,40 @@ describe("protected app layout behavior", () => {
         .getAttribute("aria-pressed")
     ).toBe("false");
     expect(screen.getByText("Compensation workspace")).toBeTruthy();
+  });
+
+  it("opens account menu from avatar and logs out", async () => {
+    setToken("valid-token");
+
+    render(
+      <MemoryRouter initialEntries={["/"]}>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <div>Secure dashboard</div>
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/login" element={<div>Login page</div>} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText("Secure dashboard")).toBeTruthy();
+
+    await userEvent.click(screen.getByRole("button", { name: "Open account menu" }));
+
+    const logoutMenuItem = await screen.findByRole("menuitem", { name: /Logout/ });
+
+    expect(logoutMenuItem).toBeTruthy();
+
+    await userEvent.click(logoutMenuItem);
+
+    await waitFor(() => expect(screen.getByText("Login page")).toBeTruthy());
   });
 
   it("redirects to login after a session-expired event clears authentication", async () => {
