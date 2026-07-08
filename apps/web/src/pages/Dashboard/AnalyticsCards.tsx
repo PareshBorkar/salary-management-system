@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import GroupsOutlinedIcon from "@mui/icons-material/GroupsOutlined";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
 import PaidOutlinedIcon from "@mui/icons-material/PaidOutlined";
 import ShowChartOutlinedIcon from "@mui/icons-material/ShowChartOutlined";
 import StackedBarChartOutlinedIcon from "@mui/icons-material/StackedBarChartOutlined";
@@ -18,7 +17,6 @@ type AnalyticsCardsProps = {
 type MetricCardProps = {
   label: string;
   value: string;
-  helper: string;
   icon: ReactNode;
   accent: string;
   iconBackground: string;
@@ -38,7 +36,6 @@ export function AnalyticsCards({
         <MetricCard
           label="Total Employees"
           value={numberFormatter.format(totalEmployees)}
-          helper="+2.5% vs last month"
           icon={<GroupsOutlinedIcon fontSize="small" />}
           accent="#2563eb"
           iconBackground="#e8f0ff"
@@ -48,7 +45,6 @@ export function AnalyticsCards({
         <MetricCard
           label="Total Payroll"
           value={formatCurrency(totalPayroll, "USD")}
-          helper="+4.3% vs last month"
           icon={<PaidOutlinedIcon fontSize="small" />}
           accent="#059669"
           iconBackground="#dff7eb"
@@ -58,7 +54,6 @@ export function AnalyticsCards({
         <MetricCard
           label="Average Salary"
           value={formatCurrency(averageSalary, "USD")}
-          helper="+3.1% vs last month"
           icon={<ShowChartOutlinedIcon fontSize="small" />}
           accent="#7c3aed"
           iconBackground="#efe7ff"
@@ -81,7 +76,6 @@ export function AnalyticsCards({
 function MetricCard({
   label,
   value,
-  helper,
   icon,
   accent,
   iconBackground
@@ -122,19 +116,6 @@ function MetricCard({
           </Typography>
         </Box>
       </Stack>
-      <Typography variant="caption" sx={{ color: "#059669", mt: 1.25, display: "block" }}>
-        {helper}
-      </Typography>
-      <MoreVertIcon
-        aria-hidden="true"
-        sx={{
-          color: "text.secondary",
-          fontSize: 18,
-          position: "absolute",
-          right: 12,
-          top: 12
-        }}
-      />
     </Paper>
   );
 }

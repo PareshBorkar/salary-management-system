@@ -1,6 +1,5 @@
 import { useMemo } from "react";
-import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined";
-import { Button, Stack, Typography } from "@mui/material";
+import { Stack, Typography } from "@mui/material";
 
 import type { CompensationAnalytics } from "../../api/dashboard.api";
 import { AnalyticsCards } from "./AnalyticsCards";
@@ -26,14 +25,6 @@ export function DashboardAnalytics({ analytics }: { analytics: CompensationAnaly
             Here's what's happening with compensation at ACME.
           </Typography>
         </Stack>
-        <Button
-          variant="outlined"
-          color="inherit"
-          startIcon={<CalendarTodayOutlinedIcon fontSize="small" />}
-          sx={{ alignSelf: { xs: "flex-start", sm: "center" } }}
-        >
-          May 1 - May 31, 2024
-        </Button>
       </Stack>
 
       <AnalyticsCards

@@ -1,8 +1,11 @@
 import AddIcon from "@mui/icons-material/Add";
 import DownloadOutlinedIcon from "@mui/icons-material/DownloadOutlined";
 import TuneOutlinedIcon from "@mui/icons-material/TuneOutlined";
+import { useEffect } from "react";
 import { Alert, Box, Button, Paper, Stack, Typography } from "@mui/material";
 
+import { clearEmployeeSalaryHistoryCache } from "../../hooks/useEmployeeSalaryHistory";
+import { clearLocalCurrencyCache } from "../../hooks/useLocalCurrency";
 import { useEmployeesTable } from "../../hooks/useEmployeesTable";
 import { EmployeeFilters } from "./EmployeeFilters";
 import { EmployeePagination } from "./EmployeePagination";
@@ -10,6 +13,11 @@ import { EmployeeTable } from "./EmployeeTable";
 
 export function EmployeesPage() {
   const table = useEmployeesTable();
+
+  useEffect(() => {
+    clearEmployeeSalaryHistoryCache();
+    clearLocalCurrencyCache();
+  }, []);
 
   return (
     <Stack spacing={2}>
@@ -25,12 +33,6 @@ export function EmployeesPage() {
           spacing={1}
           justifyContent={{ xs: "flex-start", sm: "flex-end" }}
         >
-          <Button variant="outlined" startIcon={<TuneOutlinedIcon />} color="inherit">
-            Filters{table.activeFilterCount ? ` (${table.activeFilterCount})` : ""}
-          </Button>
-          <Button variant="outlined" startIcon={<DownloadOutlinedIcon />} color="inherit">
-            Export
-          </Button>
           <Button variant="contained" startIcon={<AddIcon />}>
             Add Employee
           </Button>

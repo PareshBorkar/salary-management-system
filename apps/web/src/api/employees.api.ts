@@ -71,6 +71,30 @@ export type UpdateEmployeeSalaryResponse = {
   };
 };
 
+export type EmployeeSalaryHistoryResponse = {
+  employee: {
+    id: string;
+    employeeCode: string;
+    firstName: string;
+    lastName: string;
+  };
+  salaryHistory: Array<{
+    id: string;
+    previousAmount: number;
+    newAmount: number;
+    currency: string;
+    effectiveDate: string;
+    reason: SalaryChangeReason | "HIRE";
+    notes: string | null;
+    updatedById: string | null;
+    changedBy: {
+      id: string;
+      email: string;
+    } | null;
+    createdAt: string;
+  }>;
+};
+
 export async function listEmployees(params: EmployeeListRequest, signal?: AbortSignal) {
   const response = await apiClient.get<ApiSuccessResponse<EmployeeListResponse>>(
     "/employees",
@@ -79,6 +103,19 @@ export async function listEmployees(params: EmployeeListRequest, signal?: AbortS
       params
     }
   );
+
+  return unwrapApiResponse(response.data);
+}
+
+export async function getEmployeeSalaryHistory(
+  employeeId: string,
+  signal?: AbortSignal
+) {
+  const response = await apiClient.get<
+    ApiSuccessResponse<EmployeeSalaryHistoryResponse>
+  >(`/employees/${employeeId}/salary/history`, {
+    signal
+  });
 
   return unwrapApiResponse(response.data);
 }
