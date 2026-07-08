@@ -341,6 +341,102 @@ The design system can later be customized or migrated to a dedicated internal co
 
 ---
 
+# 16. MUI Styling vs Tailwind CSS
+
+## Decision
+
+Do not add Tailwind CSS for the MVP. Continue using MUI components, MUI theming, and the existing `sx` styling approach.
+
+## Why
+
+- MUI already provides the component primitives needed for this internal HR dashboard.
+- The current UI is mostly form, table, card, navigation, and dashboard composition where MUI is a strong fit.
+- Avoids running two styling systems side by side before there is a clear design-system need.
+- Reduces build/configuration complexity and keeps styling decisions close to the component library already in use.
+
+## Trade-off
+
+MUI styling can be more verbose than utility-first CSS, and highly custom visual design may require more theme work.
+
+## Future Evolution
+
+Tailwind CSS can be introduced later if the product needs a more custom visual system, broader marketing/public pages, or a team workflow that benefits from utility-first styling. If introduced, it should be done deliberately with clear ownership boundaries so MUI component styling and Tailwind utilities do not compete in the same UI surfaces.
+
+---
+
+# 17. Local React State vs Redux
+
+## Decision
+
+Use local React state, route-level hooks, and small module-specific hooks instead of adding Redux or a similar global state management library for the MVP.
+
+## Why
+
+- The current frontend state is mostly page-local: employee filters, pagination, dashboard loading state, salary update form state, and login errors.
+- Existing hooks keep data loading, loading states, and error states close to the pages that own them.
+- Avoids adding global-state boilerplate before there is enough shared state complexity to justify it.
+- Keeps the frontend easier to reason about for the MVP and reduces dependency surface area.
+
+## Trade-off
+
+Some async state handling is repeated across hooks, and cross-page state persistence is limited.
+
+## Future Evolution
+
+Redux Toolkit, Zustand, TanStack Query, or a similar state management/data-fetching layer can be introduced later if the app develops stronger needs such as:
+
+- Shared state across many unrelated pages
+- More complex session or authorization flows
+- Cross-page persistence for filters and table state
+- More advanced API caching, retries, invalidation, or optimistic updates
+- Debugging needs that benefit from centralized state inspection
+
+Until those needs are clearer, local state and focused hooks provide a simpler and more appropriate default.
+
+---
+
+# 18. Single JWT Token vs Access Token + Refresh Token
+
+## Decision
+
+Use a single signed JWT for MVP authentication instead of issuing both an access token and a refresh token.
+
+After login, the frontend sends this JWT with authenticated API requests. When the token expires or becomes invalid, the user must log in again.
+
+## Why
+
+- Simpler implementation across frontend and backend.
+- Fewer authentication flows to test and maintain.
+- No refresh-token storage, rotation, reuse detection, or revocation workflow required.
+- Lower operational complexity while the product is still small.
+- Good fit for a controlled HR demo/MVP environment with a limited user base.
+
+This keeps authentication understandable while the project focuses on the salary-management domain: employees, salary details, history, and analytics.
+
+## Trade-off
+
+The single-token approach is easier to build and operate, but it provides weaker session lifecycle controls than an access-token plus refresh-token model.
+
+If the JWT is stolen, it can be used until it expires. There is also no silent session renewal, so users must log in again after token expiry. Immediate logout across devices and token revocation are limited unless a server-side denylist or session store is added.
+
+## Security Mitigations
+
+- Keep token expiry short enough for the risk profile.
+- Store the JWT carefully on the client.
+- Use HTTPS in deployed environments.
+- Use a strong `JWT_SECRET`.
+- Avoid putting sensitive data in the JWT payload.
+- Validate authorization on every protected backend route.
+- Add rate limiting on authentication endpoints.
+
+## Future Evolution
+
+Move to access tokens plus refresh tokens when the application needs long-lived sessions, silent token renewal, stronger logout/session revocation, multi-device session management, SSO, or enterprise-grade security controls.
+
+The likely next step is to keep short-lived access tokens, add refresh tokens stored in a secure server-side session table, rotate refresh tokens on every refresh, detect refresh-token reuse, and revoke sessions on logout or security-sensitive account changes.
+
+---
+
 # Summary
 
 The architecture intentionally prioritizes **simplicity, maintainability, scalability, and production-oriented engineering practices** over premature optimization.
