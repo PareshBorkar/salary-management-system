@@ -21,7 +21,14 @@ export async function authRoutes(app: FastifyInstance) {
     }
 
     const user = await prisma.user.findUnique({
-      where: { email: parsed.data.email }
+      where: { email: parsed.data.email },
+      include: {
+        organization: {
+          select: {
+            name: true
+          }
+        }
+      }
     });
 
     if (!user?.isActive) {
@@ -46,9 +53,16 @@ export async function authRoutes(app: FastifyInstance) {
       organizationId: user.organizationId
     };
 
+    const responseUser = {
+      ...authenticatedUser,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      organizationName: user.organization.name
+    };
+
     return sendSuccess(reply, {
       token: signJwt(authenticatedUser),
-      user: authenticatedUser
+      user: responseUser
     });
   });
 }
