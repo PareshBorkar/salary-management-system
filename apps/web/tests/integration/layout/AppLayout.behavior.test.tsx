@@ -7,8 +7,11 @@ import { StaticRouter } from "react-router-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
+  clearSessionUserDetails,
   clearSessionToken,
+  getSessionUserDetails,
   notifySessionExpired,
+  setSessionUserDetails,
   setSessionToken
 } from "../../../src/api/session";
 import { AppLayout } from "../../../src/components/AppLayout";
@@ -17,6 +20,7 @@ import { DashboardPage } from "../../../src/pages/Dashboard/DashboardPage";
 
 function setToken(token: string | null) {
   clearSessionToken();
+  clearSessionUserDetails();
 
   if (token) {
     setSessionToken(token);
@@ -27,11 +31,13 @@ describe("protected app layout behavior", () => {
   beforeEach(() => {
     vi.unstubAllGlobals();
     clearSessionToken();
+    clearSessionUserDetails();
   });
 
   afterEach(() => {
     cleanup();
     clearSessionToken();
+    clearSessionUserDetails();
     vi.unstubAllGlobals();
   });
 
@@ -72,6 +78,12 @@ describe("protected app layout behavior", () => {
   });
 
   it("renders the authenticated topbar and sidebar shell", () => {
+    setSessionUserDetails({
+      firstName: "Priya",
+      lastName: "Nair",
+      organizationName: "Northstar Systems"
+    });
+
     const html = renderToString(
       <StaticRouter location="/">
         <AppLayout>
@@ -81,7 +93,8 @@ describe("protected app layout behavior", () => {
     );
 
     expect(html).toContain("Salary Management");
-    expect(html).toContain("ACME");
+    expect(html).toContain("Northstar Systems");
+    expect(html).toContain("Priya Nair");
     expect(html).toContain("Dashboard");
     expect(html).toContain("Employees");
     expect(html).toContain("Loading dashboard analytics...");
@@ -137,6 +150,11 @@ describe("protected app layout behavior", () => {
 
   it("opens account menu from avatar and logs out", async () => {
     setToken("valid-token");
+    setSessionUserDetails({
+      firstName: "Priya",
+      lastName: "Nair",
+      organizationName: "Northstar Systems"
+    });
 
     render(
       <MemoryRouter initialEntries={["/"]}>
@@ -167,6 +185,7 @@ describe("protected app layout behavior", () => {
     await userEvent.click(logoutMenuItem);
 
     await waitFor(() => expect(screen.getByText("Login page")).toBeTruthy());
+    expect(getSessionUserDetails()).toBeNull();
   });
 
   it("redirects to login after a session-expired event clears authentication", async () => {
