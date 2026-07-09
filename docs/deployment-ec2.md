@@ -18,8 +18,8 @@ Do not commit production secrets into the repo.
 Instead, place real environment files on the EC2 instance under:
 
 ```text
-/etc/salary-management/api.env
-/etc/salary-management/postgres.env
+/etc/salary-management-system/api.env
+/etc/salary-management-system/postgres.env
 ```
 
 The committed example files are templates only.
@@ -27,10 +27,10 @@ The committed example files are templates only.
 Recommended file permissions:
 
 ```bash
-sudo mkdir -p /etc/salary-management
-sudo cp deploy/ec2/api.env.example /etc/salary-management/api.env
-sudo cp deploy/ec2/postgres.env.example /etc/salary-management/postgres.env
-sudo chmod 600 /etc/salary-management/api.env /etc/salary-management/postgres.env
+sudo mkdir -p /etc/salary-management-system
+sudo cp deploy/ec2/api.env.example /etc/salary-management-system/api.env
+sudo cp deploy/ec2/postgres.env.example /etc/salary-management-system/postgres.env
+sudo chmod 600 /etc/salary-management-system/api.env /etc/salary-management-system/postgres.env
 ```
 
 ## Suggested EC2 Layout
@@ -85,7 +85,7 @@ sudo systemctl start salary-management.service
 - The API container currently initializes the schema with `prisma db push` from its Docker entrypoint.
 - When checked-in Prisma migrations are available, this can be tightened to `prisma migrate deploy`.
 - Redis is included in the EC2 Docker Compose stack for API rate limiting.
-- Keep the Redis connection string in `/etc/salary-management/api.env`, not in the repo.
+- Keep the Redis connection string in `/etc/salary-management-system/api.env`, not in the repo.
 
 ## Future Path
 

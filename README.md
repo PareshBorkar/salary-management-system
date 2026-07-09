@@ -1,29 +1,64 @@
 # Salary Management System
 
-A web-based Salary Management System that enables HR teams to centrally manage employee compensation, salary revisions, and historical records through a secure and scalable platform.
+Salary Management System is an MVP web application for HR teams to manage employee compensation, salary revisions, and compensation analytics in one place. It supports authenticated HR users, organization-scoped employee records, salary updates, salary history, and dashboard insights.
+
+## Overview
+
+The product is designed for internal HR compensation workflows:
+
+- HR managers can log in securely.
+- Employee data can be viewed, searched, filtered, and created.
+- Current salary details and salary history are tracked per employee.
+- Salary updates preserve historical records instead of overwriting audit data.
+- Analytics summarize workforce salary distribution, payroll, departments, countries, roles, and levels.
 
 ## Tech Stack
 
-- React
-- TypeScript
-- Node.js
-- Express.js
-- PostgreSQL
-- Redis
-- Docker
+- **Frontend:** React, TypeScript, Vite, MUI, React Router, Axios
+- **Backend:** Node.js, TypeScript, Fastify, Zod
+- **Database:** PostgreSQL with Prisma ORM
+- **Cache / Rate Limiting:** Redis
+- **Authentication:** JWT
+- **Testing:** Vitest, React Testing Library
+- **Deployment:** Docker, Docker Compose, Nginx, systemd, EC2
+
+## Features
+
+- JWT-based login for HR users
+- Protected frontend routes
+- Dynamic logged-in user and organization display
+- Employee list with filtering, searching, pagination, and create employee modal
+- Employee profile with tabbed salary details and salary history
+- Salary update workflow with reason and effective date
+- Salary history audit records
+- Dashboard analytics and polished compensation charts
+- Local currency display helper for salary views
+- Request logging and health checks
+- Redis-backed token bucket API rate limiting
+- EC2-oriented Docker deployment configuration
 
 ## Architecture
 
-The application follows a **Modular Monolith** architecture with PostgreSQL as the primary database and Redis for rate limiting.
+The application follows a **modular monolith** architecture. The backend is deployed as one API service while keeping modules separated by business capability.
+
+Backend modules include:
+
+- Authentication
+- Employees
+- Salaries
+- Salary History
+- Analytics
+- Health Checks
+
+PostgreSQL stores persistent business data. Redis stores temporary token bucket state for API rate limiting. The React frontend communicates with the API over REST.
 
 ![System Architecture](./docs/images/architecture.png)
 
-## Documentation
+More detail:
 
 - [Architecture](./docs/architecture.md)
 - [Technical Trade-offs](./docs/tradeoffs.md)
-- [EC2 Deployment](./docs/deployment-ec2.md)
-- [User Stories](./docs/user-stories.md)
+- [Rate Limiting](./docs/rate-limiting.md)
 
 ## Local Setup
 
@@ -31,8 +66,7 @@ The application follows a **Modular Monolith** architecture with PostgreSQL as t
 
 - Node.js 20+
 - npm
-- PostgreSQL
-- Redis
+- Docker and Docker Compose
 
 ### Install Dependencies
 
@@ -48,47 +82,82 @@ Copy the example environment file:
 cp .env.example .env
 ```
 
-Current variables:
+Important variables:
 
-- `APP_NAME`: API service name used in health responses and logs
-- `NODE_ENV`: runtime mode such as `development` or `production`
-- `HOST`: API bind host
-- `PORT`: API bind port
-- `LOG_LEVEL`: backend log verbosity
-- `CORS_ORIGIN`: allowed frontend origin for the API
-- `VITE_API_BASE_URL`: frontend API base URL
 - `DATABASE_URL`: PostgreSQL connection string
-- `REDIS_URL`: Redis connection string for optional dependency checks and future rate limiting
-- `JWT_SECRET`: JWT signing secret for authentication
+- `REDIS_URL`: Redis connection string
+- `JWT_SECRET`: JWT signing secret
+- `CORS_ORIGIN`: allowed frontend origin
+- `VITE_API_BASE_URL`: frontend API base URL
+- `RATE_LIMIT_ENABLED`: enables API rate limiting
+- `RATE_LIMIT_BUCKET_CAPACITY`: global token bucket capacity
+- `RATE_LIMIT_REFILL_TOKENS`: tokens restored per interval
+- `RATE_LIMIT_REFILL_INTERVAL_MS`: token refill interval
 
 ### Start Local Development
 
-Run both workspaces:
+Start Postgres, Redis, and the API with Docker:
 
 ```bash
-npm run dev
+docker compose up --build
 ```
 
-This starts:
+The API will be available at:
 
-- the API at `http://localhost:3000`
-- the web app at `http://localhost:5173`
+```text
+http://localhost:3000/v1/health
+```
+
+Start the frontend separately:
+
+```bash
+npm run dev -w @salary-management/web
+```
+
+The web app will be available at:
+
+```text
+http://localhost:5173
+```
+
+For local API-only development without Docker, run:
+
+```bash
+npm run dev -w @salary-management/api
+```
 
 ## Seed Data
 
-Seed the API database with the default ACME dataset:
+Seed data creates the default ACME organization, HR manager, employees, salaries, and salary history records.
+
+For local development:
 
 ```bash
-npm run prisma:seed --workspace apps/api
+npm run prisma:seed -w @salary-management/api
 ```
 
-There is also a test-oriented seed command:
+For the Docker API container:
 
 ```bash
-npm run prisma:seed:test --workspace apps/api
+docker compose exec api node dist/prisma/seed.js
 ```
 
-## Testing
+To verify seeded employees:
+
+```bash
+docker compose exec postgres sh -lc 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "select count(*) from employees;"'
+```
+
+## Demo Credentials
+
+Seeded login user:
+
+```text
+Email: hr.manager@acme.example
+Password: Password123!
+```
+
+## Tests
 
 Run all workspace tests:
 
@@ -99,48 +168,86 @@ npm run test
 Run focused workspace tests:
 
 ```bash
-npm run test --workspace apps/api
-npm run test --workspace apps/web
+npm run test -w @salary-management/api
+npm run test -w @salary-management/web
 ```
 
-## Docker
+Run type checks:
 
-The repo includes a local container setup for:
+```bash
+npm run typecheck
+```
 
-- the API
+Run the focused API rate-limit suite:
+
+```bash
+cd apps/api
+npx vitest run tests/integration/rate-limit/rate-limit.behavior.test.ts
+```
+
+## Deployment
+
+The project includes an EC2 deployment guide using Docker Compose, externalized environment files, Redis, PostgreSQL, host Nginx, and systemd.
+
+- [EC2 Deployment Guide](./docs/deployment-ec2.md)
+
+Expected EC2 paths:
+
+```text
+/opt/salary-management-system
+/etc/salary-management-system/api.env
+/etc/salary-management-system/postgres.env
+```
+
+Start the EC2 stack from the repo root:
+
+```bash
+docker compose -f deploy/ec2/docker-compose.ec2.yml up -d --build
+```
+
+The EC2 stack runs separate containers for:
+
 - PostgreSQL
-- an optional Nginx reverse proxy
+- Redis
+- API
 
-Start the API and Postgres:
+The API binds to `127.0.0.1:3000` and should be exposed through Nginx.
 
-```bash
-docker compose up --build
-```
+## Assumptions
 
-The API will be available at [http://localhost:3000/v1/health](http://localhost:3000/v1/health).
+- The MVP is used by HR users inside one organization-scoped application flow.
+- Salary amounts are stored in USD as the base reporting currency.
+- Local currency conversion is display-only.
+- The seeded ACME dataset is demo data, not production data.
+- Redis is required in production when rate limiting is enabled.
+- PostgreSQL is the source of truth for business data.
+- Frontend display user details may be stored in cookies, but sensitive auth data should not be stored unnecessarily.
 
-Start the optional Nginx proxy as well:
+## Trade-offs
 
-```bash
-docker compose --profile proxy up --build
-```
+- The backend is a modular monolith to keep MVP deployment and debugging simple.
+- JWT authentication uses a single token for now instead of access and refresh tokens.
+- Redis-backed token bucket rate limiting adds an infrastructure dependency but supports multi-instance API deployments.
+- Salary updates create history records for auditability, which increases storage usage.
+- EC2 Docker Compose is simple for the MVP, while RDS, ElastiCache, ECS/Fargate, and CloudFront are better long-term production targets.
 
-With the proxy enabled, the API is also available at [http://localhost:8080/v1/health](http://localhost:8080/v1/health).
+More detail:
 
-To seed local Docker data after the stack is up:
+- [Technical Trade-offs](./docs/tradeoffs.md)
 
-```bash
-docker compose exec api npm run prisma:seed
-```
+## AI Usage Summary
 
-Current note: the container bootstrap uses `prisma db push` because Prisma migrations have not been fully checked into the repo yet. Once migrations are added, the Docker entrypoint can move to `prisma migrate deploy`.
+AI assistance was used to accelerate implementation and documentation work, including:
 
-## EC2 Deployment
+- Reviewing and updating frontend UI flows
+- Implementing salary detail and salary history API behavior
+- Adding Redis-backed token bucket rate limiting
+- Improving dashboard analytics layout
+- Writing and updating tests
+- Drafting deployment and rate-limit documentation
 
-For EC2-oriented deployment with externalized secrets, Docker Compose, `systemd`, and optional host Nginx, see:
-
-- [EC2 Deployment](./docs/deployment-ec2.md)
+Human review remains required for production deployment, secrets management, infrastructure hardening, and final business acceptance.
 
 ## Status
 
-🚧 Currently under development as an MVP.
+Currently under development as an MVP.
