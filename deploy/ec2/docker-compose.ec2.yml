@@ -3,7 +3,7 @@ services:
     image: postgres:16-alpine
     restart: unless-stopped
     env_file:
-      - ${DEPLOY_ENV_DIR:-/salary-management-system}/postgres.env
+      - ${DEPLOY_ENV_DIR:-/etc/salary-management-system}/postgres.env
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -35,7 +35,7 @@ services:
       redis:
         condition: service_healthy
     env_file:
-      - ${DEPLOY_ENV_DIR:-/salary-management-system}/api.env
+      - ${DEPLOY_ENV_DIR:-/etc/salary-management-system}/api.env
     ports:
       - "127.0.0.1:3000:3000"
     healthcheck:
