@@ -16,6 +16,18 @@ services:
       timeout: 5s
       retries: 10
 
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
   api:
     build:
       context: .
@@ -23,6 +35,8 @@ services:
     restart: unless-stopped
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     environment:
       APP_NAME: salary-management-api
@@ -33,6 +47,7 @@ services:
       CORS_ORIGIN: http://localhost:5173
       DATABASE_URL: postgresql://salary:salary@postgres:5432/salary_management?schema=public
       JWT_SECRET: replace-with-a-secure-secret
+      REDIS_URL: redis://redis:6379
     ports:
       - "3000:3000"
     healthcheck:
@@ -60,3 +75,4 @@ services:
 
 volumes:
   postgres-data:
+  redis-data:
