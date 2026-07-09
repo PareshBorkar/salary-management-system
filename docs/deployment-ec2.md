@@ -38,7 +38,7 @@ sudo chmod 600 /etc/salary-management/api.env /etc/salary-management/postgres.en
 Clone the repo onto the instance at:
 
 ```text
-/opt/salary-management
+/opt/salary-management-system
 ```
 
 This matches the `WorkingDirectory` used by the sample `systemd` unit.
@@ -84,7 +84,8 @@ sudo systemctl start salary-management.service
 
 - The API container currently initializes the schema with `prisma db push` from its Docker entrypoint.
 - When checked-in Prisma migrations are available, this can be tightened to `prisma migrate deploy`.
-- Redis is optional in the current API configuration. If you add it later, keep its connection string in `/etc/salary-management/api.env`, not in the repo.
+- Redis is included in the EC2 Docker Compose stack for API rate limiting.
+- Keep the Redis connection string in `/etc/salary-management/api.env`, not in the repo.
 
 ## Future Path
 

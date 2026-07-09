@@ -7,7 +7,7 @@ Wants=network-online.target
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-WorkingDirectory=/opt/salary-management
+WorkingDirectory=/opt/salary-management-system
 Environment=DEPLOY_ENV_DIR=/etc/salary-management
 ExecStart=/usr/bin/docker compose -f deploy/ec2/docker-compose.ec2.yml up -d --build
 ExecStop=/usr/bin/docker compose -f deploy/ec2/docker-compose.ec2.yml down
