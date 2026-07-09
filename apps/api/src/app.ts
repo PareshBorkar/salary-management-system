@@ -8,6 +8,10 @@ import { registerAuthentication } from "./shared/auth/authenticate.js";
 import { prisma } from "./shared/database/prisma.js";
 import { registerErrorHandlers } from "./shared/http/errors.js";
 import { registerRequestLogging } from "./shared/logger/request-logging.js";
+import {
+  registerRateLimiting,
+  type RegisterRateLimitingOptions
+} from "./shared/middleware/rate-limit.middleware.js";
 import { authRoutes } from "./modules/auth/auth.routes.js";
 import { employeeRoutes } from "./modules/employees/employees.routes.js";
 import { healthRoutes } from "./modules/health/health.routes.js";
@@ -16,6 +20,7 @@ import { analyticsRoutes } from "./modules/analytics/analytics.routes.js";
 
 type CreateAppOptions = {
   logger?: FastifyServerOptions["logger"];
+  rateLimit?: RegisterRateLimitingOptions;
 };
 
 export async function createApp(
@@ -33,6 +38,7 @@ export async function createApp(
   });
 
   await registerAuthentication(app);
+  await registerRateLimiting(app, options.rateLimit);
   registerRequestLogging(app);
 
   await app.register(healthRoutes, { prefix: "/v1" });

@@ -76,7 +76,7 @@ export async function salaryRoutes(app: FastifyInstance) {
   app.patch(
     "/employees/:employeeId/salary",
     {
-      preHandler: app.authenticate
+      preHandler: [app.authenticate, app.rateLimit.salaryUpdate]
     },
     async (request, reply) => {
       if (!request.requestContext) {
