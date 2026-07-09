@@ -157,6 +157,23 @@ Email: hr.manager@acme.example
 Password: Password123!
 ```
 
+## Demo Flow
+
+Use this flow to review the MVP end to end:
+
+1. Log in with the seeded HR manager credentials.
+2. Review the dashboard summary cards for employee count, payroll, average salary, and median salary.
+3. Open the analytics dashboard and review compensation charts by country, department, role, level, and salary bands.
+4. Navigate to Employees.
+5. Search for an employee by name, email, or employee code.
+6. Apply filters such as country, department, role, level, or status.
+7. Open an employee profile from the employee list.
+8. Review the employee detail tab for profile and current salary information.
+9. Open the salary update form, enter a new salary amount, reason, and effective date, then save.
+10. Confirm the current salary details refresh after the update.
+11. Switch to the Salary History tab and verify the salary change appears with previous amount, new amount, reason, effective date, and changed-by user.
+12. Return to analytics and confirm compensation summaries still load after the update.
+
 ## Tests
 
 Run all workspace tests:
