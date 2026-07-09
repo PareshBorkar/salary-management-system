@@ -69,13 +69,13 @@ This avoids race conditions when multiple API instances receive requests for the
 
 Rate limiting is configured through environment variables.
 
-| Variable | Purpose | Local default |
-| --- | --- | --- |
-| `RATE_LIMIT_ENABLED` | Enables or disables API rate limiting. | `true` |
-| `RATE_LIMIT_BUCKET_CAPACITY` | Global bucket size. | `1000` |
-| `RATE_LIMIT_REFILL_TOKENS` | Number of tokens restored per refill interval. | `1000` |
-| `RATE_LIMIT_REFILL_INTERVAL_MS` | Refill interval in milliseconds. | `60000` |
-| `REDIS_URL` | Redis connection string used by the rate-limit store. | Optional outside production |
+| Variable                        | Purpose                                               | Local default               |
+| ------------------------------- | ----------------------------------------------------- | --------------------------- |
+| `RATE_LIMIT_ENABLED`            | Enables or disables API rate limiting.                | `true`                      |
+| `RATE_LIMIT_BUCKET_CAPACITY`    | Global bucket size.                                   | `1000`                      |
+| `RATE_LIMIT_REFILL_TOKENS`      | Number of tokens restored per refill interval.        | `1000`                      |
+| `RATE_LIMIT_REFILL_INTERVAL_MS` | Refill interval in milliseconds.                      | `60000`                     |
+| `REDIS_URL`                     | Redis connection string used by the rate-limit store. | Optional outside production |
 
 Production should set `REDIS_URL`. When rate limiting is enabled in production, the API requires Redis so limits are shared across instances.
 
