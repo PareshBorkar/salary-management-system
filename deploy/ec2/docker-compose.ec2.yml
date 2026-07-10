@@ -46,7 +46,7 @@ services:
           "-e",
           "fetch('http://127.0.0.1:3000/v1/health').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"
         ]
-      interval: 15s
+      interval: 5m
       timeout: 5s
       retries: 10
 
