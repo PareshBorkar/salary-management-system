@@ -11,6 +11,7 @@ import {
   type EmployeeSalaryHistoryResponse,
   type UpdateEmployeeSalaryResponse
 } from "../../../src/api/employees.api";
+import { getTaxSlabs, type TaxSlabsResponse } from "../../../src/api/taxSlabs.api";
 import { clearEmployeeSalaryHistoryCache } from "../../../src/hooks/useEmployeeSalaryHistory";
 import { clearLocalCurrencyCache } from "../../../src/hooks/useLocalCurrency";
 import {
@@ -26,9 +27,16 @@ vi.mock("../../../src/api/employees.api", async () => {
   };
 });
 
+vi.mock("../../../src/api/taxSlabs.api", async () => {
+  return {
+    getTaxSlabs: vi.fn()
+  };
+});
+
 const getEmployeeSalaryMock = vi.mocked(getEmployeeSalary);
 const getEmployeeSalaryHistoryMock = vi.mocked(getEmployeeSalaryHistory);
 const updateEmployeeSalaryMock = vi.mocked(updateEmployeeSalary);
+const getTaxSlabsMock = vi.mocked(getTaxSlabs);
 
 const employee: EmployeeProfileData = {
   id: "employee-1",
@@ -162,6 +170,54 @@ const salaryDetailsResponse: EmployeeSalaryResponse = {
   }
 };
 
+const taxSlabsResponse: TaxSlabsResponse = {
+  country: "IN",
+  currency: "INR",
+  regime: "NEW",
+  assessmentYear: "2026-27",
+  slabs: [
+    {
+      minIncome: 0,
+      maxIncome: 400_000,
+      taxRatePercent: 0
+    },
+    {
+      minIncome: 400_001,
+      maxIncome: 800_000,
+      taxRatePercent: 5
+    },
+    {
+      minIncome: 800_001,
+      maxIncome: 1_200_000,
+      taxRatePercent: 10
+    },
+    {
+      minIncome: 1_200_001,
+      maxIncome: 1_600_000,
+      taxRatePercent: 15
+    },
+    {
+      minIncome: 1_600_001,
+      maxIncome: 2_000_000,
+      taxRatePercent: 20
+    },
+    {
+      minIncome: 2_000_001,
+      maxIncome: 2_400_000,
+      taxRatePercent: 25
+    },
+    {
+      minIncome: 2_400_001,
+      maxIncome: null,
+      taxRatePercent: 30
+    }
+  ],
+  calculation: {
+    taxableIncome: 10_624_000,
+    taxAmount: 2_767_200
+  }
+};
+
 describe("EmployeeProfile", () => {
   beforeEach(() => {
     clearEmployeeSalaryHistoryCache();
@@ -169,9 +225,11 @@ describe("EmployeeProfile", () => {
     getEmployeeSalaryMock.mockReset();
     getEmployeeSalaryHistoryMock.mockReset();
     updateEmployeeSalaryMock.mockReset();
+    getTaxSlabsMock.mockReset();
     getEmployeeSalaryMock.mockResolvedValue(salaryDetailsResponse);
     getEmployeeSalaryHistoryMock.mockResolvedValue(salaryHistoryResponse());
     updateEmployeeSalaryMock.mockResolvedValue(salaryUpdateResponse);
+    getTaxSlabsMock.mockResolvedValue(taxSlabsResponse);
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({
@@ -256,6 +314,38 @@ describe("EmployeeProfile", () => {
     await userEvent.click(screen.getByRole("tab", { name: "Salary Details" }));
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows India tax slabs tab and calculation for Indian employees", async () => {
+    render(<EmployeeProfile employee={employee} />);
+
+    await userEvent.click(screen.getByRole("tab", { name: "Tax Slabs" }));
+
+    await waitFor(() =>
+      expect(getTaxSlabsMock).toHaveBeenCalledWith(
+        {
+          country: "IN",
+          regime: "NEW",
+          assessmentYear: "2026-27",
+          amount: 10_624_000
+        },
+        expect.any(AbortSignal)
+      )
+    );
+    expect(await screen.findByText("India Tax Slabs")).toBeTruthy();
+    expect(screen.getByText("Taxable Income")).toBeTruthy();
+    expect(screen.getByText("₹10,624,000")).toBeTruthy();
+    expect(screen.getByText("Estimated Slab Tax")).toBeTruthy();
+    expect(screen.getByText("₹2,767,200")).toBeTruthy();
+    expect(screen.getByText("₹2,400,001+")).toBeTruthy();
+    expect(screen.getByText("30%")).toBeTruthy();
+  });
+
+  it("does not show tax slabs tab for non-Indian employees", () => {
+    render(<EmployeeProfile employee={{ ...employee, country: "US" }} />);
+
+    expect(screen.queryByRole("tab", { name: "Tax Slabs" })).toBeNull();
+    expect(getTaxSlabsMock).not.toHaveBeenCalled();
   });
 
   it("opens the update salary popup", async () => {
