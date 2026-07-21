@@ -1,5 +1,5 @@
 import CloseIcon from "@mui/icons-material/Close";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import {
   Alert,
   Avatar,
@@ -24,12 +24,13 @@ import {
   getEmployeeSalaryHistory,
   type EmployeeSalaryHistoryResponse
 } from "../../api/employees.api";
+import { getTaxSlabs, type TaxSlabsResponse } from "../../api/taxSlabs.api";
 import { useEmployeeSalaryHistory } from "../../hooks/useEmployeeSalaryHistory";
 import { useLocalCurrency } from "../../hooks/useLocalCurrency";
 import { formatCountry } from "./employeeOptions";
 import { SalaryUpdateForm } from "./SalaryUpdateForm";
 
-type EmployeeProfileTab = "overview" | "salary-details" | "salary-history";
+type EmployeeProfileTab = "overview" | "salary-details" | "salary-history" | "tax-slabs";
 
 type SalaryHistoryEntry = {
   id: string;
@@ -93,6 +94,7 @@ export function EmployeeProfile({ employee }: { employee: EmployeeProfileData })
     currentSalary?.currency ?? employee.compensationSummary?.currency ?? "USD";
   const compensationSummary =
     employee.compensationSummary ?? defaultCompensationSummary(profileEmployee);
+  const shouldShowTaxSlabs = employee.country === "IN";
 
   async function loadSalaryHistory() {
     if (!employee.id || salaryHistoryLoader.isLoading || hasLoadedSalaryHistory) {
@@ -229,6 +231,7 @@ export function EmployeeProfile({ employee }: { employee: EmployeeProfileData })
             <Tab value="overview" label="Overview" />
             <Tab value="salary-details" label="Salary Details" />
             <Tab value="salary-history" label="Salary History" />
+            {shouldShowTaxSlabs ? <Tab value="tax-slabs" label="Tax Slabs" /> : null}
           </Tabs>
         </Box>
 
@@ -258,6 +261,9 @@ export function EmployeeProfile({ employee }: { employee: EmployeeProfileData })
               errorMessage={salaryHistoryLoader.errorMessage}
               onRetry={loadSalaryHistory}
             />
+          ) : null}
+          {activeTab === "tax-slabs" && shouldShowTaxSlabs ? (
+            <TaxSlabsPanel employee={profileEmployee} />
           ) : null}
         </Box>
 
@@ -486,6 +492,139 @@ function SalaryHistoryPanel({
   );
 }
 
+function TaxSlabsPanel({ employee }: { employee: EmployeeProfileData }) {
+  const [taxSlabs, setTaxSlabs] = useState<TaxSlabsResponse | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const needsCurrencyConversion = Boolean(
+    employee.salary && employee.salary.currency !== "INR"
+  );
+  const localSalary = useLocalCurrency(
+    needsCurrencyConversion ? (employee.salary?.amount ?? null) : null,
+    "INR"
+  );
+  const taxableIncome =
+    employee.salary?.currency === "INR"
+      ? employee.salary.amount
+      : localSalary.amountLocal === null
+        ? null
+        : Math.round(localSalary.amountLocal);
+
+  useEffect(() => {
+    if (taxableIncome === null) {
+      return;
+    }
+
+    const amount = taxableIncome;
+    const controller = new AbortController();
+
+    async function loadTaxSlabs() {
+      setIsLoading(true);
+      setErrorMessage(null);
+
+      try {
+        const result = await getTaxSlabs(
+          {
+            country: "IN",
+            regime: "NEW",
+            assessmentYear: "2026-27",
+            amount
+          },
+          controller.signal
+        );
+
+        setTaxSlabs(result);
+      } catch (error) {
+        if (controller.signal.aborted) {
+          return;
+        }
+
+        setErrorMessage(
+          error instanceof Error ? error.message : "Unable to load tax slabs."
+        );
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    void loadTaxSlabs();
+
+    return () => {
+      controller.abort();
+    };
+  }, [taxableIncome]);
+
+  return (
+    <SectionPanel title="India Tax Slabs">
+      <Stack spacing={1.5}>
+        {localSalary.isLoading ? (
+          <Stack direction="row" spacing={1.5} alignItems="center">
+            <CircularProgress size={20} />
+            <Typography color="text.secondary">Converting salary to INR...</Typography>
+          </Stack>
+        ) : null}
+
+        {!localSalary.isLoading && localSalary.errorMessage ? (
+          <Alert severity="error">{localSalary.errorMessage}</Alert>
+        ) : null}
+
+        {!localSalary.isLoading && !localSalary.errorMessage && taxableIncome === null ? (
+          <Typography color="text.secondary">No current salary available.</Typography>
+        ) : null}
+
+        {!localSalary.isLoading && !localSalary.errorMessage && isLoading ? (
+          <Stack direction="row" spacing={1.5} alignItems="center">
+            <CircularProgress size={20} />
+            <Typography color="text.secondary">Loading tax slabs...</Typography>
+          </Stack>
+        ) : null}
+
+        {!localSalary.isLoading &&
+        !localSalary.errorMessage &&
+        !isLoading &&
+        errorMessage ? (
+          <Alert severity="error">{errorMessage}</Alert>
+        ) : null}
+
+        {!localSalary.isLoading &&
+        !localSalary.errorMessage &&
+        !isLoading &&
+        !errorMessage &&
+        taxSlabs &&
+        taxableIncome !== null ? (
+          <>
+            <DetailRow
+              label="Taxable Income"
+              value={formatCurrency(taxableIncome, taxSlabs.currency)}
+            />
+            <DetailRow
+              label="Estimated Slab Tax"
+              value={formatCurrency(
+                taxSlabs.calculation?.taxAmount ?? 0,
+                taxSlabs.currency
+              )}
+            />
+            <DetailRow label="Regime" value={`${taxSlabs.regime} Regime`} />
+            <DetailRow label="Assessment Year" value={taxSlabs.assessmentYear} />
+            <Divider />
+            <Stack spacing={1}>
+              {taxSlabs.slabs.map((slab) => (
+                <DetailRow
+                  key={`${slab.minIncome}-${slab.maxIncome ?? "above"}`}
+                  label={formatTaxSlabRange(slab)}
+                  value={`${slab.taxRatePercent}%`}
+                />
+              ))}
+            </Stack>
+          </>
+        ) : null}
+      </Stack>
+    </SectionPanel>
+  );
+}
+
 function SectionPanel({ title, children }: { title: string; children: ReactNode }) {
   return (
     <Paper
@@ -572,6 +711,17 @@ function formatLocalCurrencyValue(
   }
 
   return formatCurrency(localSalary.amountLocal, currency);
+}
+
+function formatTaxSlabRange(slab: TaxSlabsResponse["slabs"][number]) {
+  if (slab.maxIncome === null) {
+    return `${formatCurrency(slab.minIncome, "INR")}+`;
+  }
+
+  return `${formatCurrency(slab.minIncome, "INR")} to ${formatCurrency(
+    slab.maxIncome,
+    "INR"
+  )}`;
 }
 
 function getCurrencyForCountry(country: string | null) {
